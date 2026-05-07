@@ -1,0 +1,46 @@
+AIA Internal Technology Group
+Employee Handbook
+Version: 1.0
+Owner: Human Resources Department
+
+1. Purpose
+
+This employee handbook defines the general workplace policies for AIA Internal Technology Group. It applies to full-time employees, contractors, interns, and temporary workers who support the AKP Platform and related internal technology services.
+
+2. Annual Leave Policy
+
+Full-time employees are entitled to annual leave according to their employment contract and local labor regulations. Employees must submit annual leave requests through the internal HR system at least five working days before the planned leave date.
+
+Managers should review leave requests within three working days. Leave approval depends on team capacity, project delivery commitments, and business continuity requirements.
+
+Unused annual leave should be used within the calendar year unless local regulations or HR approval allow carry-over.
+
+3. Sick Leave Policy
+
+Employees who need sick leave should notify their direct manager as early as possible. If sick leave lasts more than two consecutive working days, the employee may be required to provide valid medical documentation according to local HR rules.
+
+Sick leave should be recorded in the internal HR system after the employee returns to work or as soon as reasonably possible.
+
+4. Remote Work Policy
+
+AIA Internal Technology Group supports hybrid work when job responsibilities allow it. Employees working remotely must remain reachable during core working hours and must use approved company devices and secure network connections.
+
+Employees must not access confidential company systems from public or shared computers. Sensitive documents should not be downloaded to personal devices.
+
+5. Code of Conduct
+
+Employees must act with integrity, professionalism, and respect. Harassment, discrimination, retaliation, or misuse of company resources is not allowed.
+
+Employees must protect company confidential information and avoid conflicts of interest. Any suspected violation should be reported to HR or the Compliance Department.
+
+6. Information Security Responsibilities
+
+Employees are responsible for protecting company data, credentials, and internal documents. Passwords, API keys, access tokens, and private certificates must never be shared through email, chat tools, or public repositories.
+
+If an employee suspects that a password, API key, or access token has been exposed, the incident must be reported to the Security Operations team within 24 hours.
+
+7. Training Requirements
+
+All employees must complete annual compliance and information security training. Engineering employees working on the AKP Platform must also complete secure development training.
+
+Failure to complete required training may lead to temporary access restrictions to internal systems.

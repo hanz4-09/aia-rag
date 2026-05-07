@@ -1,0 +1,28 @@
+app:
+  name: aia-rag
+  env: dev
+
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  temperature: 0.1
+
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+
+retrieval:
+  mode: vector
+  top_k: 5
+  score_threshold: 0.55
+  enable_reranker: false
+  max_distance: 20.0
+
+
+vector_store:
+  provider: chroma
+  persist_directory: ./data/chroma
+  collection_name: internal_kb
+
+logging:
+  path: ./logs/rag_service.jsonl

@@ -1,0 +1,55 @@
+AIA Internal Technology Group
+Compliance Guide
+Version: 1.0
+Owner: Compliance Department
+
+1. Purpose
+
+This compliance guide defines the minimum compliance requirements for employees and teams working with internal systems, customer-related data, operational logs, and technical documentation.
+
+2. Data Classification
+
+Company data is classified into four levels:
+
+Public: Information approved for public release.
+Internal: Information intended for employees and authorized contractors.
+Confidential: Sensitive business, technical, or operational information.
+Restricted: Highly sensitive information such as credentials, personal data, security keys, and incident details.
+
+Restricted data must only be accessed by authorized personnel with a valid business need.
+
+3. Data Handling Rules
+
+Employees must store internal and confidential documents only in approved company systems. Confidential and restricted data must not be copied to personal cloud drives, personal email accounts, or unmanaged devices.
+
+When sharing documents internally, employees should grant the minimum required permissions. Public sharing links are not allowed for confidential or restricted data.
+
+4. Access Control Requirements
+
+Access to production systems, audit logs, customer-related data, and AKP Platform administrative tools must follow the principle of least privilege.
+
+Access requests must be approved by the employee's manager and the system owner. Privileged access must be reviewed at least once every quarter.
+
+5. Audit Logging Requirements
+
+Systems handling confidential or restricted data must record audit logs for important actions, including login, permission changes, data export, configuration updates, and administrative operations.
+
+Audit logs must include timestamp, user identity, action type, target resource, request ID, and result status.
+
+6. Retention Policy
+
+Operational logs should be retained for at least 90 days unless a longer retention period is required by legal, security, or business requirements.
+
+Audit logs for privileged operations should be retained for at least one year.
+
+7. Incident Reporting
+
+Employees must report suspected compliance incidents, unauthorized access, data leakage, credential exposure, or suspicious system behavior to the Compliance Department and Security Operations team within 24 hours.
+
+The incident report should include the incident time, affected system, suspected data type, involved users, and initial impact assessment.
+
+8. Generative AI Usage
+
+Employees may use approved generative AI tools for productivity and engineering support. However, employees must not enter restricted data, personal data, source code secrets, customer confidential information, or production credentials into unapproved AI tools.
+
+AI-generated content must be reviewed by a human before being used in business decisions, external communications, or production changes.

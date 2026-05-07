@@ -1,0 +1,56 @@
+AIA Internal Technology Group
+AKP Platform 架构设计文档
+版本：1.0
+负责人：Architecture Team
+
+1. 系统目标
+
+AKP Platform 是一个面向公司内部知识库的 RAG 问答平台，目标是帮助员工快速查询 HR 政策、合规指南、数据安全要求、技术规格和架构文档。
+
+系统必须保证答案严格基于检索到的上下文，不能编造未被文档支持的信息。当检索置信度不足、问题超出范围或触发安全规则时，系统应返回拒答。
+
+2. 总体架构
+
+AKP Platform 由五个核心模块组成：
+
+文档入库模块：负责读取 txt、docx 和 pdf 文档，抽取文本内容。
+切分模块：负责将长文档切分为较小的 chunk，并保留来源信息。
+检索模块：负责根据用户问题从向量数据库中检索相关 chunk。
+生成模块：负责基于检索上下文生成答案。MVP 阶段使用 extractive generator，后续将替换为真正的 LLM-based generator。
+观测模块：负责记录结构化日志，并生成运营报告。
+
+3. 服务拆分
+
+MVP 阶段系统采用单体 FastAPI 服务实现，包含 /health 和 /chat 两个接口。
+
+未来可拆分为 ingestion service、retrieval service、generation service、evaluation service 和 reporting service，以支持独立扩展和部署。
+
+4. RAG 检索链路
+
+用户请求进入 /chat 接口后，系统首先执行基础安全检查和 PII 处理。通过安全检查后，系统将用户问题转换为 query embedding，并在 Chroma 向量库中执行相似度检索。
+
+检索模块返回 top-k chunk。系统会根据 distance threshold 过滤低置信度结果。如果没有可用 chunk，生成模块应返回 NO_RETRIEVED_CONTEXT 拒答。
+
+5. 日志与监控
+
+每次请求都应记录一条 JSONL 结构化日志。日志字段包括 request_id、session_id、query、retrieval_mode、reranker_enabled、top_k、retrieved_chunk_ids、retrieval_distances、retrieval_latency_ms、generation_latency_ms、total_latency_ms、cache_hit、refused 和 refusal_reason。
+
+日志中的 query 必须进行 PII 脱敏，避免记录邮箱、手机号、身份证号、API Key、访问令牌和密码。
+
+6. 缓存设计
+
+MVP 阶段 cache_hit 字段固定为 false。未来可以加入 query cache 或 semantic cache。
+
+如果用户问题和历史问题完全一致，可以直接返回缓存结果。如果语义相似度超过阈值，也可以考虑使用 semantic cache，但必须确保不会返回不适用于当前问题的答案。
+
+7. 故障处理
+
+如果向量数据库不可用，系统应返回明确错误并记录 error_code。如果检索结果为空或置信度不足，系统应拒答，而不是生成没有依据的答案。
+
+如果生成模块调用 LLM 失败，系统应记录错误、返回临时失败提示，并避免输出未验证内容。
+
+8. 可演进性
+
+系统设计应支持后续演进，包括 retrieval mode 切换、hybrid search、reranker 开关、模型版本切换、token 成本统计、answer compliance 评估、faithfulness 评估和 context precision 评估。
+
+所有关键技术选型应通过配置控制，避免在业务代码中硬编码。

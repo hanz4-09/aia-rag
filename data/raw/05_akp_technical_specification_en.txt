@@ -1,0 +1,75 @@
+AIA Internal Technology Group
+AKP Platform Technical Specification
+Version: 1.0
+Owner: Engineering Department
+
+1. Overview
+
+AKP Platform is an internal knowledge processing and question answering platform. It supports document ingestion, text chunking, embedding generation, vector search, retrieval-augmented generation, structured logging, and operations reporting.
+
+The platform is designed for internal employee support, compliance knowledge access, and engineering document search.
+
+2. API Design
+
+The AKP Platform exposes RESTful APIs through the backend service.
+
+The health check endpoint is GET /health. It returns the current service status.
+
+The chat endpoint is POST /chat. It accepts a user question and an optional session ID. It returns an answer, refusal status, refusal reason, source chunks, and latency.
+
+Example request:
+
+{
+  "question": "What is the annual leave policy?",
+  "session_id": "demo-session-001"
+}
+
+Example response:
+
+{
+  "answer": "Based on the retrieved internal knowledge...",
+  "refused": false,
+  "refusal_reason": null,
+  "sources": [],
+  "latency_ms": 120
+}
+
+3. Authentication
+
+The MVP version does not enforce user authentication. In production, the service should integrate with the company identity provider and validate user access before answering questions.
+
+Future authentication should support single sign-on, service-to-service tokens, and role-based access control.
+
+4. Request Tracing
+
+Each chat request must generate a unique request_id. The request_id must be included in structured logs and can be used to trace retrieval, generation, refusal, latency, and errors.
+
+The system should also support session_id for multi-turn conversation tracking.
+
+5. Retrieval
+
+The MVP retrieval mode is vector-only search. Documents are converted into chunks, and each chunk is embedded into a vector representation.
+
+The retriever receives a user question, creates a query embedding, searches the Chroma vector store, and returns the top-k most relevant chunks.
+
+The system should support configurable retrieval modes in future versions, including vector-only, hybrid search, and hybrid search with reranking.
+
+6. Error Handling
+
+The API should return a clear error message when required inputs are missing, the vector store is unavailable, or the retrieval pipeline fails.
+
+For low-confidence retrieval or out-of-scope questions, the service should return a refusal response instead of generating unsupported content.
+
+7. Rate Limiting
+
+The MVP version does not implement rate limiting. Future versions should limit requests by user, session, or API client to prevent abuse and protect model cost.
+
+8. Data Model
+
+A document chunk contains chunk_id, text, source file name, source path, and chunk index.
+
+A chat log contains request_id, session_id, redacted query, retrieval mode, reranker flag, retrieved chunk IDs, latency metrics, cache hit flag, refusal status, and refusal reason.
+
+9. Configuration
+
+The service must use configuration files instead of hard-coded values. Important configurable fields include model name, embedding model, retrieval mode, top_k, distance threshold, reranker flag, vector store path, and logging path.
