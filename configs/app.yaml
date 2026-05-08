@@ -12,11 +12,16 @@ embedding:
   model: text-embedding-3-small
 
 retrieval:
-  mode: vector
+  mode: hybrid
   top_k: 5
   score_threshold: 0.55
-  enable_reranker: false
   max_distance: 20.0
+  enable_reranker: true
+  vector_weight: 0.6
+  keyword_weight: 0.4
+  rerank_hybrid_score_weight: 0.7
+  rerank_keyword_score_weight: 0.2
+  rerank_vector_rank_weight: 0.1
 
 
 vector_store:
@@ -26,3 +31,7 @@ vector_store:
 
 logging:
   path: ./logs/rag_service.jsonl
+
+cache:
+  enabled: true
+  ttl_seconds: 300

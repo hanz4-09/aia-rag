@@ -37,6 +37,12 @@ class ExtractiveGenerator:
                     "filename": filename,
                     "source": metadata.get("source"),
                     "distance": chunk.get("distance"),
+                    "keyword_score": chunk.get("keyword_score"),
+                    "hybrid_score": chunk.get("hybrid_score"),
+                    "retrieval_source": chunk.get("retrieval_source"),
+                    "vector_rank": chunk.get("vector_rank"),
+                    "keyword_rank": chunk.get("keyword_rank"),
+                    "reranker_score": chunk.get("reranker_score"),
                 }
             )
 
