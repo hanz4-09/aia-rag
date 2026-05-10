@@ -1,1 +1,1 @@
-invalid type: string "AIA Internal Technology Group\n数据安全政策\n版本：1.0\n负责人：Security Operations Team\n\n1. 目的\n\n本数据安全政策用于规范 AIA Internal Technology Group 内部系统、日志数据、研发文档、个人信息和敏感凭证的处理方式。该政策适用于 AKP Platform 及相关技术系统。\n\n2. 数据分类\n\n services.\�^������������
+invalid type: string "### 2.2 NO_RETRIEVED_CONTEXT\n\n当系统无法从内部知识库中找到足够相关的信息来回答问题时，系统应返回：\n\n- `refused = true`\n- `refusal_reason = NO_RETRIEVED_CONTEXT`\n\n典型触发场景包括：\n\n- 用户问题超出当前内部知识库范围。\n- 检索结果为空。\n- 检索结果与用户问题没有足够关系。\n reporting.\n\n

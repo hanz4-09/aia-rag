@@ -1,0 +1,110 @@
+# AIA Internal Technology Group - PII Redaction Specification
+
+本文档定义 AKP Platform 当前版本支持的敏感信息脱敏规则和占位符格式。
+
+## 1. 脱敏目标
+
+AKP Platform 在日志、AI 分析结果和系统响应中，应尽量避免输出未脱敏的个人信息和敏感凭证。
+
+脱敏的目标是：
+
+- 避免邮箱、手机号、身份证号等个人信息出现在日志或回答中。
+- 避免 API Key、secret、token、access token 等敏感凭证值出现在日志或回答中。
+- 保留必要的诊断上下文，同时降低敏感信息泄露风险。
+
+## 2. 当前支持的脱敏格式
+
+AKP Platform 当前版本支持以下脱敏格式：
+
+| 数据类型 | 识别方式 | 脱敏后格式 |
+|---|---|---|
+| Email 地址 | 标准邮箱格式 | `[EMAIL]` |
+| Phone number / 手机号 | 10-11 位号码，或常见带国家码号码 | `[PHONE]` |
+| API Key / Secret / Token / Access Token 的值 | 形如 `api_key=xxx`、`secret: xxx`、`token=xxx`、`access_token: xxx` | `[REDACTED_SECRET]` |
+| 15-18 位数字 ID | 15 到 18 位连续数字 | `[ID_NUMBER]` |
+
+## 3. 示例
+
+### 3.1 Email
+
+原始文本：
+
+    user@example.com
+
+脱敏后：
+
+    [EMAIL]
+
+### 3.2 Phone number
+
+原始文本：
+
+    13812345678
+
+脱敏后：
+
+    [PHONE]
+
+### 3.3 API Key / Secret / Token / Access Token
+
+原始文本：
+
+    api_key=sk-1234567890abcdef
+
+脱敏后：
+
+    api_key=[REDACTED_SECRET]
+
+原始文本：
+
+    token: abcdef1234567890
+
+脱敏后：
+
+    token=[REDACTED_SECRET]
+
+### 3.4 15-18 位数字 ID
+
+原始文本：
+
+    310101199001011234
+
+脱敏后：
+
+    [ID_NUMBER]
+
+## 4. 当前版本限制
+
+当前版本的 PII redaction 是基础规则实现，不是完整的数据安全产品。
+
+当前限制包括：
+
+1. 当前版本不会单独输出 `[EMPLOYEE_ID]` 占位符。
+2. 当前版本不会把所有员工 ID 都识别为独立类型。
+3. 当前版本不会识别所有自然语言形式的密码描述。
+4. 当前版本主要识别带有 `api_key`、`secret`、`token` 或 `access_token` 字段名的敏感凭证值。
+5. 当前版本的 ID 识别主要针对 15-18 位连续数字。
+6. 当前版本不保证覆盖所有国家、地区和业务系统中的身份标识格式。
+
+## 5. 回答脱敏格式问题时的要求
+
+当用户询问“敏感数据脱敏的格式是什么”时，答案应基于当前支持的脱敏格式回答。
+
+推荐回答应包括：
+
+1. Email 地址会被替换为 `[EMAIL]`。
+2. Phone number / 手机号会被替换为 `[PHONE]`。
+3. API Key、secret、token 和 access token 的值会被替换为 `[REDACTED_SECRET]`。
+4. 15-18 位数字 ID 会被替换为 `[ID_NUMBER]`。
+
+不要声称当前版本支持 `[EMPLOYEE_ID]`，除非代码或配置中已经实现该占位符。
+
+不要声称所有密码文本都会被自动脱敏。当前版本只明确支持带有 `secret`、`token`、`access_token`、`api_key` 等字段名的敏感凭证值脱敏。
+
+## 6. 与标准拒答的关系
+
+PII redaction 是脱敏机制，不是标准拒答场景。
+
+如果用户只是询问脱敏规则，系统应该基于内部知识库正常回答，不应返回 `NO_RETRIEVED_CONTEXT` 或 `SAFETY_RULE_TRIGGERED`。
+
+只有当用户请求提取、展示或泄露真实密钥、token、密码等敏感内容时，才可能触发安全拒答。

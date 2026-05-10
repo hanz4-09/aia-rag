@@ -1,6 +1,3 @@
-# 读取 configs/app.yaml
-# 读取 .env 里的 OPENAI_API_KEY
-# 合并成一个 config 对象
 import os
 from pathlib import Path
 from typing import Any, Dict
@@ -14,7 +11,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 def load_config(config_path: str = "configs/app.yaml") -> Dict[str, Any]:
     """
-    Load application config from YAML and environment variables.
+    Load application config from YAML file and .env file.
+
+    Notes:
+    - Phase 1 used OPENAI_API_KEY.
+    - Phase 3 supports OpenAI-compatible providers such as Alibaba Cloud Bailian.
+    - Use LLM_API_KEY for the LLM generator.
     """
     load_dotenv(PROJECT_ROOT / ".env")
 
@@ -23,13 +25,25 @@ def load_config(config_path: str = "configs/app.yaml") -> Dict[str, Any]:
     if not full_path.exists():
         raise FileNotFoundError(f"Config file not found: {full_path}")
 
-    with open(full_path, "r", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
+    with open(full_path, "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
 
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY is not set. Please add it to your .env file.")
+    llm_config = config.get("llm", {})
+    generator_config = config.get("generator", {})
 
-    config["openai_api_key"] = openai_api_key
+    llm_api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+    llm_base_url = os.getenv("LLM_BASE_URL") or llm_config.get("base_url")
+
+    if "llm" not in config:
+        config["llm"] = {}
+
+    config["llm"]["api_key"] = llm_api_key
+    config["llm"]["base_url"] = llm_base_url
+
+    if generator_config.get("type") == "llm" and not llm_api_key:
+        raise ValueError(
+            "LLM_API_KEY is not set. Please add it to your .env file, "
+            "or set generator.type to extractive in configs/app.yaml."
+        )
 
     return config

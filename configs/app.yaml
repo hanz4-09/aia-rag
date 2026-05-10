@@ -2,10 +2,20 @@ app:
   name: aia-rag
   env: dev
 
+generator:
+  type: llm
+  fallback_type: extractive
+
 llm:
-  provider: openai
-  model: gpt-4o-mini
+  provider: bailian
+  model: qwen-plus
   temperature: 0.1
+  base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+
+# llm:
+#   provider: openai
+#   model: gpt-4o-mini
+#   temperature: 0.1
 
 embedding:
   provider: openai
@@ -23,6 +33,8 @@ retrieval:
   rerank_keyword_score_weight: 0.2
   rerank_vector_rank_weight: 0.1
 
+context:
+  max_context_chunks: 3
 
 vector_store:
   provider: chroma
@@ -35,3 +47,16 @@ logging:
 cache:
   enabled: true
   ttl_seconds: 300
+
+cost:
+  enabled: true
+  currency: USD
+
+  # Reference list price for qwen-plus, 0 < input tokens <= 256K, non-thinking mode.
+  # Used for PRD-required cost estimation per 1,000 calls.
+  input_price_per_1m_tokens: 0.4
+  output_price_per_1m_tokens: 1.2
+
+  # Current account may still be using free quota.
+  # If true, billable cost is reported as 0 while reference cost is still calculated.
+  free_quota_enabled: true

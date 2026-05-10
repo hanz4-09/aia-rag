@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from app.core.cache import InMemoryCache, build_cache_key
 from app.core.config import load_config
 from app.core.logger import write_json_log
-from app.rag.generator import ExtractiveGenerator
+from app.rag.generator import create_generator
 from app.rag.pii import redact_pii
 from app.rag.retriever_factory import create_retriever
 from app.rag.safety import check_safety
@@ -19,7 +19,7 @@ router = APIRouter()
 
 config: Dict[str, Any] = load_config()
 retriever = create_retriever(config)
-generator = ExtractiveGenerator()
+generator = create_generator(config)
 
 cache_config = config.get("cache", {})
 cache_enabled = cache_config.get("enabled", False)
@@ -46,32 +46,25 @@ def chat(request: ChatRequest):
             latency_ms=total_latency_ms,
         )
 
-        log_record = {
-            "request_id": request_id,
-            "session_id": request.session_id,
-            "query": redacted_question,
-            "retrieval_mode": config["retrieval"]["mode"],
-            "reranker_enabled": config["retrieval"].get("enable_reranker", False),
-            "top_k": config["retrieval"].get("top_k", 5),
-            "retrieved_chunk_ids": [],
-            "retrieved_sources": [],
-            "retrieval_distances": [],
-            "retrieval_sources": [],
-            "keyword_scores": [],
-            "hybrid_scores": [],
-            "vector_ranks": [],
-            "keyword_ranks": [],
-            "reranker_scores": [],
-            "rerank_latency_ms": 0,
-            "retrieval_latency_ms": 0,
-            "generation_latency_ms": 0,
-            "total_latency_ms": total_latency_ms,
-            "input_tokens": None,
-            "output_tokens": None,
-            "cache_hit": False,
-            "refused": True,
-            "refusal_reason": safety_result["reason"],
-        }
+        log_record = _build_log_record(
+            request_id=request_id,
+            session_id=request.session_id,
+            query=redacted_question,
+            retrieved_chunks=[],
+            generation_result={
+                "refused": True,
+                "refusal_reason": safety_result["reason"],
+                "input_tokens": None,
+                "output_tokens": None,
+                "total_tokens": None,
+                "model_name": config.get("llm", {}).get("model"),
+                "generator_type": config.get("generator", {}).get("type"),
+            },
+            retrieval_latency_ms=0,
+            generation_latency_ms=0,
+            total_latency_ms=total_latency_ms,
+            cache_hit=False,
+        )
 
         write_json_log(config["logging"]["path"], log_record)
 
@@ -100,52 +93,15 @@ def chat(request: ChatRequest):
                 latency_ms=total_latency_ms,
             )
 
-            log_record = {
-                "request_id": request_id,
-                "session_id": request.session_id,
-                "query": redacted_question,
-                "retrieval_mode": config["retrieval"]["mode"],
-                "reranker_enabled": config["retrieval"].get("enable_reranker", False),
-                "top_k": config["retrieval"].get("top_k", 5),
-                "retrieved_chunk_ids": [
-                    source.get("chunk_id") for source in cached_response["sources"]
-                ],
-                "retrieved_sources": [
-                    source.get("filename") for source in cached_response["sources"]
-                ],
-                "retrieval_distances": [
-                    source.get("distance") for source in cached_response["sources"]
-                ],
-                "retrieval_sources": [
-                    source.get("retrieval_source")
-                    for source in cached_response["sources"]
-                ],
-                "keyword_scores": [
-                    source.get("keyword_score") for source in cached_response["sources"]
-                ],
-                "hybrid_scores": [
-                    source.get("hybrid_score") for source in cached_response["sources"]
-                ],
-                "vector_ranks": [
-                    source.get("vector_rank") for source in cached_response["sources"]
-                ],
-                "keyword_ranks": [
-                    source.get("keyword_rank") for source in cached_response["sources"]
-                ],
-                "reranker_scores": [
-                    source.get("reranker_score")
-                    for source in cached_response["sources"]
-                ],
-                "rerank_latency_ms": 0,
-                "retrieval_latency_ms": 0,
-                "generation_latency_ms": 0,
-                "total_latency_ms": total_latency_ms,
-                "input_tokens": None,
-                "output_tokens": None,
-                "cache_hit": cache_hit,
-                "refused": cached_response["refused"],
-                "refusal_reason": cached_response["refusal_reason"],
-            }
+            log_record = _build_log_record_from_sources(
+                request_id=request_id,
+                session_id=request.session_id,
+                query=redacted_question,
+                sources=cached_response["sources"],
+                generation_result=cached_response,
+                total_latency_ms=total_latency_ms,
+                cache_hit=cache_hit,
+            )
 
             write_json_log(config["logging"]["path"], log_record)
 
@@ -182,13 +138,46 @@ def chat(request: ChatRequest):
                 "refused": generation_result["refused"],
                 "refusal_reason": generation_result["refusal_reason"],
                 "sources": generation_result["sources"],
+                "input_tokens": generation_result.get("input_tokens"),
+                "output_tokens": generation_result.get("output_tokens"),
+                "total_tokens": generation_result.get("total_tokens"),
+                "model_name": generation_result.get("model_name"),
+                "generator_type": generation_result.get("generator_type"),
             },
         )
 
-    log_record = {
+    log_record = _build_log_record(
+        request_id=request_id,
+        session_id=request.session_id,
+        query=redacted_question,
+        retrieved_chunks=retrieved_chunks,
+        generation_result=generation_result,
+        retrieval_latency_ms=retrieval_latency_ms,
+        generation_latency_ms=generation_latency_ms,
+        total_latency_ms=total_latency_ms,
+        cache_hit=cache_hit,
+    )
+
+    write_json_log(config["logging"]["path"], log_record)
+
+    return response
+
+
+def _build_log_record(
+    request_id: str,
+    session_id: str | None,
+    query: str,
+    retrieved_chunks: list[Dict[str, Any]],
+    generation_result: Dict[str, Any],
+    retrieval_latency_ms: int,
+    generation_latency_ms: int,
+    total_latency_ms: int,
+    cache_hit: bool,
+) -> Dict[str, Any]:
+    return {
         "request_id": request_id,
-        "session_id": request.session_id,
-        "query": redacted_question,
+        "session_id": session_id,
+        "query": query,
         "retrieval_mode": config["retrieval"]["mode"],
         "reranker_enabled": config["retrieval"].get("enable_reranker", False),
         "top_k": config["retrieval"].get("top_k", 5),
@@ -227,13 +216,72 @@ def chat(request: ChatRequest):
         "retrieval_latency_ms": retrieval_latency_ms,
         "generation_latency_ms": generation_latency_ms,
         "total_latency_ms": total_latency_ms,
-        "input_tokens": None,
-        "output_tokens": None,
+        "input_tokens": generation_result.get("input_tokens"),
+        "output_tokens": generation_result.get("output_tokens"),
+        "total_tokens": generation_result.get("total_tokens"),
+        "model_name": generation_result.get("model_name"),
+        "generator_type": generation_result.get("generator_type"),
+        "context_chunks_used": generation_result.get("context_chunks_used"),
         "cache_hit": cache_hit,
         "refused": generation_result["refused"],
         "refusal_reason": generation_result["refusal_reason"],
     }
 
-    write_json_log(config["logging"]["path"], log_record)
 
-    return response
+def _build_log_record_from_sources(
+    request_id: str,
+    session_id: str | None,
+    query: str,
+    sources: list[Dict[str, Any]],
+    generation_result: Dict[str, Any],
+    total_latency_ms: int,
+    cache_hit: bool,
+) -> Dict[str, Any]:
+    return {
+        "request_id": request_id,
+        "session_id": session_id,
+        "query": query,
+        "retrieval_mode": config["retrieval"]["mode"],
+        "reranker_enabled": config["retrieval"].get("enable_reranker", False),
+        "top_k": config["retrieval"].get("top_k", 5),
+        "retrieved_chunk_ids": [
+            source.get("chunk_id") for source in sources
+        ],
+        "retrieved_sources": [
+            source.get("filename") for source in sources
+        ],
+        "retrieval_distances": [
+            source.get("distance") for source in sources
+        ],
+        "retrieval_sources": [
+            source.get("retrieval_source") for source in sources
+        ],
+        "keyword_scores": [
+            source.get("keyword_score") for source in sources
+        ],
+        "hybrid_scores": [
+            source.get("hybrid_score") for source in sources
+        ],
+        "vector_ranks": [
+            source.get("vector_rank") for source in sources
+        ],
+        "keyword_ranks": [
+            source.get("keyword_rank") for source in sources
+        ],
+        "reranker_scores": [
+            source.get("reranker_score") for source in sources
+        ],
+        "rerank_latency_ms": 0,
+        "retrieval_latency_ms": 0,
+        "generation_latency_ms": 0,
+        "total_latency_ms": total_latency_ms,
+        "input_tokens": generation_result.get("input_tokens"),
+        "output_tokens": generation_result.get("output_tokens"),
+        "total_tokens": generation_result.get("total_tokens"),
+        "model_name": generation_result.get("model_name"),
+        "generator_type": generation_result.get("generator_type"),
+        "context_chunks_used": generation_result.get("context_chunks_used"),
+        "cache_hit": cache_hit,
+        "refused": generation_result["refused"],
+        "refusal_reason": generation_result["refusal_reason"],
+    }

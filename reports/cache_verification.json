@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-10T21:38:13",
+  "cache_enabled": true,
+  "ttl_seconds": 300,
+  "total_requests": 15,
+  "cache_hits": 10,
+  "cache_misses": 5,
+  "cache_hit_rate": 0.6667,
+  "avg_latency_miss_ms": 2485.6,
+  "avg_latency_hit_ms": 0.0,
+  "latency_reduction_pct": 100.0,
+  "cache_functioning": true
+}

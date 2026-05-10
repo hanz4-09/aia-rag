@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -20,6 +20,9 @@ class Source(BaseModel):
 
     # Reranker field
     reranker_score: Optional[float] = None
+
+    # Context assembly field
+    used_in_context: Optional[bool] = None
 
 
 class ChatResponse(BaseModel):
