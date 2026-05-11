@@ -1,4 +1,3 @@
-# 负责把长文档切成小段
 from typing import Dict, List
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -22,19 +21,23 @@ def split_documents(
 
     for doc in documents:
         text_chunks = splitter.split_text(doc["text"])
+        document_metadata = doc.get("metadata", {})
 
         for index, chunk_text in enumerate(text_chunks):
             chunk_id = f"{doc['filename']}_chunk_{index}"
+
+            metadata = {
+                "source": doc["source"],
+                "filename": doc["filename"],
+                "chunk_index": index,
+            }
+            metadata.update(document_metadata)
 
             chunks.append(
                 {
                     "chunk_id": chunk_id,
                     "text": chunk_text,
-                    "metadata": {
-                        "source": doc["source"],
-                        "filename": doc["filename"],
-                        "chunk_index": index,
-                    },
+                    "metadata": metadata,
                 }
             )
 

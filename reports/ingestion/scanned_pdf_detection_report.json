@@ -1,0 +1,32 @@
+{
+  "raw_dir": "C:\\Users\\dx\\OneDrive\\aia-rag\\data\\raw",
+  "supported_files_seen": 10,
+  "loaded_documents": 9,
+  "skipped_empty_documents": 1,
+  "pdf_detection_results": [
+    {
+      "filename": "98_text_pdf_detection_test.pdf",
+      "source": "C:\\Users\\dx\\OneDrive\\aia-rag\\data\\raw\\98_text_pdf_detection_test.pdf",
+      "status": "loaded",
+      "total_pages": 1,
+      "pages_with_text": 1,
+      "pages_without_text": 0,
+      "extracted_chars": 100,
+      "scanned_pdf_candidate": false,
+      "partial_scanned_pdf_candidate": false,
+      "ocr_performed": false
+    },
+    {
+      "filename": "99_scanned_pdf_detection_test.pdf",
+      "source": "C:\\Users\\dx\\OneDrive\\aia-rag\\data\\raw\\99_scanned_pdf_detection_test.pdf",
+      "status": "skipped_no_extractable_text",
+      "total_pages": 1,
+      "pages_with_text": 0,
+      "pages_without_text": 1,
+      "extracted_chars": 0,
+      "scanned_pdf_candidate": true,
+      "partial_scanned_pdf_candidate": true,
+      "ocr_performed": false
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from app.core.cache import InMemoryCache, build_cache_key
 from app.core.config import load_config
 from app.core.logger import write_json_log
+from app.core.session_memory import InMemorySessionMemory
 from app.rag.generator import create_generator
 from app.rag.pii import redact_pii
 from app.rag.retriever_factory import create_retriever
@@ -24,6 +25,10 @@ generator = create_generator(config)
 cache_config = config.get("cache", {})
 cache_enabled = cache_config.get("enabled", False)
 cache = InMemoryCache(ttl_seconds=cache_config.get("ttl_seconds", 300))
+memory_config = config.get("memory", {})
+session_memory = InMemorySessionMemory(
+    max_turns=memory_config.get("max_turns", 3)
+)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -111,10 +116,13 @@ def chat(request: ChatRequest):
     retrieved_chunks = retriever.retrieve(request.question)
     retrieval_latency_ms = int((time.time() - retrieval_start) * 1000)
 
+    conversation_history = session_memory.get_history(request.session_id)
+
     generation_start = time.time()
     generation_result = generator.generate(
         question=request.question,
         retrieved_chunks=retrieved_chunks,
+        conversation_history=conversation_history,
     )
     generation_latency_ms = int((time.time() - generation_start) * 1000)
 
@@ -129,6 +137,13 @@ def chat(request: ChatRequest):
         sources=generation_result["sources"],
         latency_ms=total_latency_ms,
     )
+
+    if not generation_result["refused"]:
+        session_memory.add_turn(
+            session_id=request.session_id,
+            question=redacted_question,
+            answer=generation_result["answer"],
+        )
 
     if cache_enabled and not generation_result["refused"]:
         cache.set(

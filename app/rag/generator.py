@@ -18,7 +18,12 @@ class ExtractiveGenerator:
     It simply formats retrieved chunks into a grounded answer.
     """
 
-    def generate(self, question: str, retrieved_chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate(
+        self,
+        question: str,
+        retrieved_chunks: List[Dict[str, Any]],
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
         if not retrieved_chunks:
             return {
                 "answer": NO_RETRIEVED_CONTEXT_ANSWER,
@@ -108,7 +113,12 @@ class LLMGenerator:
             base_url=self.base_url,
         )
 
-    def generate(self, question: str, retrieved_chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate(
+        self,
+        question: str,
+        retrieved_chunks: List[Dict[str, Any]],
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
         if not retrieved_chunks:
             return {
                 "answer": NO_RETRIEVED_CONTEXT_ANSWER,
@@ -129,12 +139,16 @@ class LLMGenerator:
             all_retrieved_chunks=retrieved_chunks,
         )
 
+        history_text = self._build_conversation_history_text(conversation_history)
+
         system_prompt = (
             "You are an internal knowledge base assistant for AIA Internal Technology Group.\n"
-            "Answer the user's question strictly based on the provided context.\n"
+            "Answer the user's question strictly based on the provided retrieved context.\n"
+            "Conversation history is provided only to understand follow-up references.\n"
+            "Do not treat conversation history as a source of policy truth.\n"
             "Do not use external knowledge.\n"
             "Do not guess.\n"
-            "If the context does not contain enough information, respond exactly with:\n"
+            "If the retrieved context does not contain enough information, respond exactly with:\n"
             f"{NO_RETRIEVED_CONTEXT_ANSWER}\n"
             "Keep the answer concise, professional, and grounded.\n"
             "If the user asks in Chinese, answer in Chinese. If the user asks in English, answer in English.\n"
@@ -142,9 +156,11 @@ class LLMGenerator:
         )
 
         user_prompt = (
-            "Context:\n"
+            "Conversation history:\n"
+            f"{history_text}\n\n"
+            "Retrieved context:\n"
             f"{context}\n\n"
-            "Question:\n"
+            "Current question:\n"
             f"{question}\n\n"
             "Answer:"
         )
@@ -247,6 +263,34 @@ class LLMGenerator:
             )
 
         return "\n\n---\n\n".join(context_parts), sources
+
+
+    def _build_conversation_history_text(
+        self,
+        conversation_history: Optional[List[Dict[str, str]]],
+    ) -> str:
+        if not conversation_history:
+            return "No previous conversation."
+
+        parts = []
+
+        for index, turn in enumerate(conversation_history, start=1):
+            question = turn.get("question", "").strip()
+            answer = turn.get("answer", "").strip()
+
+            if not question and not answer:
+                continue
+
+            parts.append(
+                f"Turn {index}\n"
+                f"User: {question}\n"
+                f"Assistant: {answer}"
+            )
+
+        if not parts:
+            return "No previous conversation."
+
+        return "\n\n".join(parts)
 
     def _extract_usage(self, response: Any) -> Dict[str, Optional[int]]:
         """

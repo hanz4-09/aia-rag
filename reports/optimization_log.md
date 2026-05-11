@@ -1571,3 +1571,574 @@ Qwen-Max latency outlier:
 Phase 3 follow-up resolution update is completed.
 
 All PRD metrics remain passed, and the main follow-up items have either been resolved or diagnosed.
+
+---
+
+## Optimization 026: Lightweight Multi-turn Memory
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Multi-turn RAG QA / Session Memory  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires a multi-turn RAG QA + generative service.
+
+Before this change, the `/chat` API accepted and logged `session_id`, but the system did not use previous conversation turns during generation.
+
+This meant the service behaved mostly as single-turn RAG QA.
+
+### Change
+
+Added lightweight in-memory session memory.
+
+New file:
+
+- `app/core/session_memory.py`
+
+Updated files:
+
+- `app/api/chat.py`
+- `app/rag/generator.py`
+- `configs/app.yaml`
+
+Implemented behavior:
+
+- store recent turns by `session_id`
+- keep latest N turns, default 3
+- load session history before generation
+- include conversation history in the LLM prompt
+- keep retrieved context as the source of truth
+- write generated answer back to session memory
+
+### Validation Result
+
+Manual two-turn validation was performed.
+
+Session:
+
+    multi-turn-demo-001
+
+Turn 1:
+
+    What are the audit logging requirements?
+
+Turn 2:
+
+    How long should they be retained?
+
+Observed answer:
+
+    Operational logs should be retained for at least 90 days,
+    while audit logs for privileged operations should be retained for at least one year.
+
+Structured logs confirmed both requests used the same session ID.
+
+### Limitations
+
+This is an MVP-level memory implementation.
+
+Limitations:
+
+- in-memory only
+- not persistent
+- not shared across instances
+- retrieval query still uses the current question
+- no query rewriting
+- no summarization
+
+### Future Enhancement
+
+A more complex memory system should be implemented later, including:
+
+- persistent session memory
+- conversation summarization
+- history-aware query rewriting
+- production-grade shared storage
+- multi-turn evaluation set
+
+### Related Files
+
+- `app/core/session_memory.py`
+- `app/api/chat.py`
+- `app/rag/generator.py`
+- `configs/app.yaml`
+- `logs/rag_service.jsonl`
+- `reports/diagnosis/2026-05-11_lightweight_multiturn_memory_report.md`
+
+### Final Conclusion
+
+Lightweight multi-turn memory is completed.
+
+The service now supports basic session-based multi-turn QA behavior.
+
+---
+
+## Optimization 027: Scanned PDF Detection and Graceful Handling
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: PDF Ingestion / Scanned PDF Handling  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD states that the corpus may include a small portion of scanned PDFs.
+
+Before this change, PDF ingestion used `pypdf` text extraction but did not explicitly detect scanned/no-text PDFs or generate ingestion diagnostics.
+
+### Change
+
+Updated the ingestion pipeline to detect scanned or no-text PDFs.
+
+Updated files:
+
+- `app/ingestion/loader.py`
+- `app/ingestion/chunker.py`
+- `scripts/ingest.py`
+
+New behavior:
+
+- text-based PDFs are loaded normally
+- PDFs with no extractable text are detected as scanned PDF candidates
+- scanned/no-text PDFs are skipped gracefully
+- partial scanned PDFs are loaded with warning metadata
+- ingestion diagnostic reports are generated
+
+Generated reports:
+
+- `reports/ingestion/scanned_pdf_detection_report.json`
+- `reports/ingestion/scanned_pdf_detection_report.md`
+
+### Validation Result
+
+Two test PDFs were used:
+
+1. `98_text_pdf_detection_test.pdf`
+   - status = loaded
+   - pages_with_text = 1
+   - extracted_chars = 100
+   - scanned_pdf_candidate = False
+
+2. `99_scanned_pdf_detection_test.pdf`
+   - status = skipped_no_extractable_text
+   - pages_with_text = 0
+   - pages_without_text = 1
+   - extracted_chars = 0
+   - scanned_pdf_candidate = True
+   - OCR performed = False
+
+Final ingestion summary:
+
+- supported_files_seen = 10
+- loaded_documents = 9
+- skipped_empty_documents = 1
+- PDF files checked = 2
+- scanned_pdf_candidates = 1
+- generated_chunks = 31
+- total_chunks_stored = 31
+
+### PRD Impact
+
+This closes the scanned PDF handling gap at the detection and graceful-handling level.
+
+OCR extraction is not implemented and remains a future enhancement.
+
+### Related Files
+
+- `app/ingestion/loader.py`
+- `app/ingestion/chunker.py`
+- `scripts/ingest.py`
+- `data/raw/98_text_pdf_detection_test.pdf`
+- `data/raw/99_scanned_pdf_detection_test.pdf`
+- `reports/ingestion/scanned_pdf_detection_report.json`
+- `reports/ingestion/scanned_pdf_detection_report.md`
+- `reports/diagnosis/2026-05-11_scanned_pdf_detection_graceful_handling_report.md`
+
+### Final Conclusion
+
+Scanned PDF detection and graceful handling is completed.
+
+Text-based PDFs are ingested, scanned/no-text PDFs are detected and skipped gracefully, and OCR is explicitly documented as future enhancement.
+
+---
+
+## Optimization 028: Multi-turn QA Evaluation Formalization
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Multi-turn RAG QA / Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires a multi-turn RAG QA + generative service.
+
+After implementing lightweight session-based memory, a formal and reproducible evaluation was needed to verify that multi-turn behavior works beyond manual testing.
+
+### Change
+
+Added:
+
+- `scripts/evaluate_multiturn.py`
+
+The script evaluates predefined two-turn cases using the same `session_id`.
+
+It checks:
+
+- whether history was used
+- whether the second-turn answer was not refused
+- whether the expected source was hit
+- whether expected keywords appeared in the second-turn answer
+
+The multi-turn evaluation was also added to:
+
+- `scripts/run_all_evaluations.py`
+
+as a core evaluation task named:
+
+    multiturn_qa
+
+### Validation Result
+
+Final multi-turn evaluation result:
+
+- total_cases = 3
+- passing_count = 3
+- pass_rate = 1.0
+- history_used_rate = 1.0
+- source_hit_rate = 1.0
+- avg_keyword_hit_rate = 1.0
+- PRD status = PASS
+
+### Related Files
+
+- `scripts/evaluate_multiturn.py`
+- `scripts/run_all_evaluations.py`
+- `reports/evaluations/2026-05-11_multiturn_eval.csv`
+- `reports/evaluations/2026-05-11_multiturn_eval.md`
+- `reports/diagnosis/2026-05-11_multiturn_evaluation_report.md`
+
+### Final Conclusion
+
+Multi-turn QA evaluation formalization is completed.
+
+The project now has reproducible evidence that lightweight session-based multi-turn QA works for representative follow-up questions.
+
+---
+
+## Optimization 028: Multi-turn QA Evaluation Formalization
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Multi-turn RAG QA / Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires a multi-turn RAG QA + generative service.
+
+After implementing lightweight session-based memory, a formal and reproducible evaluation was needed to verify that multi-turn behavior works beyond manual testing.
+
+### Change
+
+Added:
+
+- `scripts/evaluate_multiturn.py`
+
+The script evaluates predefined two-turn cases using the same `session_id`.
+
+It checks:
+
+- whether history was used
+- whether the second-turn answer was not refused
+- whether the expected source was hit
+- whether expected keywords appeared in the second-turn answer
+
+The multi-turn evaluation was also added to:
+
+- `scripts/run_all_evaluations.py`
+
+as a core evaluation task named:
+
+    multiturn_qa
+
+### Validation Result
+
+Final multi-turn evaluation result:
+
+- total_cases = 3
+- passing_count = 3
+- pass_rate = 1.0
+- history_used_rate = 1.0
+- source_hit_rate = 1.0
+- avg_keyword_hit_rate = 1.0
+- PRD status = PASS
+
+### Related Files
+
+- `scripts/evaluate_multiturn.py`
+- `scripts/run_all_evaluations.py`
+- `reports/evaluations/2026-05-11_multiturn_eval.csv`
+- `reports/evaluations/2026-05-11_multiturn_eval.md`
+- `reports/diagnosis/2026-05-11_multiturn_evaluation_report.md`
+
+### Final Conclusion
+
+Multi-turn QA evaluation formalization is completed.
+
+The project now has reproducible evidence that lightweight session-based multi-turn QA works for representative follow-up questions.
+
+---
+
+## Optimization 029: Cache Evaluation Formalization
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Cache Behavior / Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires caching support and a minimal operations report that includes cache hit rate.
+
+Before this evaluation, cache existed in code and logs, but there was no dedicated formal evaluation proving cache miss/hit behavior.
+
+### Change
+
+Added:
+
+- `scripts/evaluate_cache.py`
+
+The script sends identical requests twice and validates:
+
+- first request cache miss
+- second request cache hit
+- non-empty answer
+- expected keyword coverage
+- latency improvement
+- cache_hit values in structured logs
+
+The cache evaluation was also added to:
+
+- `scripts/run_all_evaluations.py`
+
+as a core evaluation task named:
+
+    cache
+
+### Validation Result
+
+Final cache evaluation result:
+
+- total_cases = 2
+- passing_count = 2
+- pass_rate = 1.0
+- first_cache_miss_rate = 1.0
+- second_cache_hit_rate = 1.0
+- latency_improved_rate = 1.0
+- avg_keyword_hit_rate = 1.0
+- PRD status = PASS
+
+Latency evidence:
+
+- cache_audit_logging: 5161 ms -> 6 ms
+- cache_api_key_leak: 2750 ms -> 7 ms
+
+### Related Files
+
+- `scripts/evaluate_cache.py`
+- `scripts/run_all_evaluations.py`
+- `app/core/cache.py`
+- `app/api/chat.py`
+- `reports/evaluations/2026-05-11_cache_eval.csv`
+- `reports/evaluations/2026-05-11_cache_eval.md`
+- `reports/diagnosis/2026-05-11_cache_evaluation_report.md`
+
+### Final Conclusion
+
+Cache Evaluation Formalization is completed.
+
+The project now has reproducible evidence that cache miss/hit behavior works and is observable through structured logs.
+
+---
+
+## Optimization 030: Model Selection Rationale Documentation
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Model Selection / Cost-Latency-Quality Trade-off  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires token cost estimates per 1,000 calls and an explicit model-version selection rationale covering quality, cost, and latency trade-offs.
+
+Although the project already included qwen-max validation results, latency diagnosis, and operations cost metrics, the model selection rationale was previously spread across multiple reports.
+
+### Change
+
+Added a dedicated model selection rationale document:
+
+- `reports/diagnosis/2026-05-11_model_selection_rationale.md`
+
+The document explains:
+
+- why qwen-max was used for final validation
+- when lower-cost models should be used
+- quality/cost/latency trade-offs
+- reference cost per 1,000 calls
+- latency caveat from qwen-max
+- model configuration flexibility
+
+### Evidence
+
+Final qwen-max validation results:
+
+- Answer Compliance Rate = 1.0
+- Refusal Appropriateness Pass Rate = 1.0
+- Avg Context Precision = 0.9807
+- Avg Faithfulness = 1.0
+- Avg Style Consistency = 0.994
+- Latency Within 10s Rate = 0.9667
+- Concurrency Success Rate = 1.0
+- Concurrency Within 10s Rate = 1.0
+
+Operations report cost evidence:
+
+- reference_cost_per_1000_calls = 0.5188
+- estimated_billable_cost_per_1000_calls = 0.0
+
+### Final Conclusion
+
+Model Selection Rationale Documentation is completed.
+
+The project now has a dedicated document explaining model selection and the quality/cost/latency trade-off required by the PRD.
+
+---
+
+## Optimization 031: Issue Diagnosis Summary
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Issue Diagnosis / PRD Evidence Consolidation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires at least two documented issues with log or metric evidence, fix rationale, and post-fix improvement of at least 10%.
+
+Although the project already had multiple individual diagnosis reports, a consolidated summary was needed for easier review.
+
+### Change
+
+Added:
+
+- `reports/diagnosis/2026-05-11_issue_diagnosis_summary.md`
+
+The report summarizes three representative issues:
+
+1. Context Precision cross-lingual keyword alignment
+2. Answer Compliance formalization
+3. Cache behavior validation
+
+### Evidence
+
+Context Precision case:
+
+- Before: context_precision = 0.5
+- After: context_precision = 0.75
+- Relative improvement: 50%
+
+Answer Compliance case:
+
+- Before: rule_based_pass_rate = 0.6333
+- After: rule_based_pass_rate = 1.0
+- Relative improvement: approximately 57.9%
+
+Cache validation case:
+
+- Before: no dedicated cache evaluation
+- After: pass_rate = 1.0
+- Latency examples:
+  - 5161 ms -> 6 ms
+  - 2750 ms -> 7 ms
+
+### Final Conclusion
+
+Issue Diagnosis Summary is completed.
+
+The project now has a consolidated report directly addressing the PRD requirement for issue diagnosis with evidence, fix rationale, and post-fix improvement.
+
+---
+
+## Optimization 032: PDF Ingestion Evaluation Formalization
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: PDF Ingestion / Scanned PDF Detection Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD states that the internal knowledge base may include a small portion of scanned PDFs.
+
+After implementing scanned PDF detection and graceful handling, a formal evaluation was needed so the behavior could be validated reproducibly and included in one-click evaluation summaries.
+
+### Change
+
+Added:
+
+- `scripts/evaluate_ingestion_pdf_handling.py`
+
+The script reads:
+
+- `reports/ingestion/scanned_pdf_detection_report.json`
+
+and validates:
+
+- text-based PDF loading
+- scanned/no-text PDF detection
+- scanned/no-text PDF graceful skip
+- OCR status recorded as false
+
+The PDF ingestion evaluation was also added to:
+
+- `scripts/run_all_evaluations.py`
+
+as a core evaluation task named:
+
+    pdf_ingestion
+
+### Validation Result
+
+Final PDF ingestion evaluation result:
+
+- total_cases = 2
+- passing_count = 2
+- pass_rate = 1.0
+- PDF files checked = 2
+- scanned_pdf_candidates = 1
+- loaded_documents = 9
+- skipped_empty_documents = 1
+- PRD status = PASS
+
+### Related Files
+
+- `scripts/evaluate_ingestion_pdf_handling.py`
+- `scripts/run_all_evaluations.py`
+- `scripts/ingest.py`
+- `app/ingestion/loader.py`
+- `app/ingestion/chunker.py`
+- `reports/ingestion/scanned_pdf_detection_report.json`
+- `reports/ingestion/scanned_pdf_detection_report.md`
+- `reports/evaluations/2026-05-11_pdf_ingestion_eval.csv`
+- `reports/evaluations/2026-05-11_pdf_ingestion_eval.md`
+- `reports/diagnosis/2026-05-11_pdf_ingestion_evaluation_report.md`
+
+### Final Conclusion
+
+PDF Ingestion Evaluation Formalization is completed.
+
+The project now has reproducible evidence that text-based PDFs are loaded and scanned/no-text PDFs are detected and handled gracefully.

@@ -2,7 +2,9 @@
 
 A configurable RAG QA service over an internal knowledge base.
 
-This project is a RAG + Generative AI engineering case study. It supports document ingestion, chunking, local embedding generation, Chroma vector storage, hybrid retrieval, LLM-based generation, refusal handling, PII redaction, structured logging, operations reporting, and formal evaluation.
+This project is a RAG + Generative AI engineering case study.
+
+It supports document ingestion, chunking, local embedding generation, Chroma vector storage, hybrid retrieval, LLM-based generation, refusal handling, PII redaction, structured logging, operations reporting, and formal evaluation.
 
 This repository is intended as an engineering case study and evaluation-driven prototype, not a production deployment.
 
