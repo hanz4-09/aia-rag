@@ -92,7 +92,7 @@ class LLMGenerator:
         llm_config = config["llm"]
         context_config = config.get("context", {})
 
-        self.model_name = llm_config.get("model", "qwen-plus")
+        self.model_name = llm_config.get("model", "qwen-max")
         self.temperature = llm_config.get("temperature", 0.1)
         self.api_key = llm_config.get("api_key")
         self.base_url = llm_config.get("base_url")

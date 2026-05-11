@@ -2,7 +2,7 @@ import csv
 import json
 import statistics
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import yaml
 
@@ -12,6 +12,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LOG_PATH = PROJECT_ROOT / "logs" / "rag_service.jsonl"
 CONFIG_PATH = PROJECT_ROOT / "configs" / "app.yaml"
 REPORT_PATH = PROJECT_ROOT / "reports" / "operations_report.csv"
+EVALUATIONS_DIR = PROJECT_ROOT / "reports" / "evaluations"
+ANSWER_COMPLIANCE_REPORT_PATTERN = "*answer_compliance_eval.csv"
 
 
 def load_logs(log_path: Path) -> List[Dict[str, Any]]:
@@ -48,6 +50,7 @@ def percentile(values: List[float], p: float) -> float:
 
     sorted_values = sorted(values)
     index = int(round((p / 100) * (len(sorted_values) - 1)))
+
     return sorted_values[index]
 
 
@@ -63,7 +66,6 @@ def numeric_values(records: List[Dict[str, Any]], field: str) -> List[float]:
 
     for record in records:
         value = record.get(field)
-
         if isinstance(value, (int, float)):
             values.append(value)
 
@@ -75,13 +77,6 @@ def average_or_na(values: List[float]) -> float | str:
         return "N/A"
 
     return round(statistics.mean(values), 2)
-
-
-def sum_or_na(values: List[float]) -> float | str:
-    if not values:
-        return "N/A"
-
-    return round(sum(values), 2)
 
 
 def unique_non_empty_values(records: List[Dict[str, Any]], field: str) -> str:
@@ -109,8 +104,8 @@ def calculate_reference_cost(
     Estimate cost based on list price.
 
     Formula:
-    input_tokens / 1,000,000 * input_price
-    + output_tokens / 1,000,000 * output_price
+        input_tokens / 1,000,000 * input_price
+        + output_tokens / 1,000,000 * output_price
     """
     input_cost = input_tokens / 1_000_000 * input_price_per_1m_tokens
     output_cost = output_tokens / 1_000_000 * output_price_per_1m_tokens
@@ -118,9 +113,78 @@ def calculate_reference_cost(
     return input_cost + output_cost
 
 
+def find_latest_csv_report(
+    directory: Path,
+    pattern: str,
+) -> Path | None:
+    if not directory.exists():
+        return None
+
+    candidates = [path for path in directory.glob(pattern) if path.is_file()]
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+
+    return candidates[0]
+
+
+def read_summary_row(csv_path: Path) -> Dict[str, str]:
+    with open(csv_path, "r", encoding="utf-8", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            if row.get("row_type") == "summary":
+                return {
+                    key: value
+                    for key, value in row.items()
+                    if value not in [None, ""]
+                }
+
+            # Support one-row CSV reports without row_type.
+            if "row_type" not in row:
+                return {
+                    key: value
+                    for key, value in row.items()
+                    if value not in [None, ""]
+                }
+
+    return {}
+
+
+def load_latest_answer_compliance_rate() -> Tuple[str | float, str]:
+    """
+    Load answer_compliance_rate from the latest answer compliance evaluation CSV.
+
+    This metric comes from offline evaluation rather than online service logs,
+    so it is joined into operations_report.csv as an external evaluation signal.
+    """
+    latest_report = find_latest_csv_report(
+        EVALUATIONS_DIR,
+        ANSWER_COMPLIANCE_REPORT_PATTERN,
+    )
+
+    if not latest_report:
+        return "N/A", "N/A"
+
+    summary = read_summary_row(latest_report)
+    raw_rate = summary.get("answer_compliance_rate") or summary.get("rule_based_pass_rate")
+
+    if raw_rate in [None, ""]:
+        return "N/A", str(latest_report)
+
+    try:
+        return round(float(raw_rate), 4), str(latest_report)
+    except ValueError:
+        return raw_rate, str(latest_report)
+
+
 def generate_report(
     records: List[Dict[str, Any]],
     config: Dict[str, Any],
+    answer_compliance_rate: str | float,
+    answer_compliance_report: str,
 ) -> Dict[str, Any]:
     total_requests = len(records)
 
@@ -137,26 +201,23 @@ def generate_report(
     total_all_tokens = sum(total_tokens) if total_tokens else 0
 
     cache_hits = [
-        record for record in records
-        if record.get("cache_hit") is True
+        record for record in records if record.get("cache_hit") is True
     ]
 
     refused_requests = [
-        record for record in records
-        if record.get("refused") is True
+        record for record in records if record.get("refused") is True
     ]
 
     llm_requests = [
-        record for record in records
-        if record.get("generator_type") == "llm"
+        record for record in records if record.get("generator_type") == "llm"
     ]
 
     extractive_requests = [
-        record for record in records
-        if record.get("generator_type") == "extractive"
+        record for record in records if record.get("generator_type") == "extractive"
     ]
 
     cost_config = config.get("cost", {})
+
     cost_enabled = cost_config.get("enabled", False)
     currency = cost_config.get("currency", "USD")
     input_price_per_1m_tokens = float(
@@ -180,7 +241,6 @@ def generate_report(
             input_price_per_1m_tokens=input_price_per_1m_tokens,
             output_price_per_1m_tokens=output_price_per_1m_tokens,
         )
-
         reference_cost_per_request = reference_total_cost / total_requests
         reference_cost_per_1000_calls = reference_cost_per_request * 1000
 
@@ -193,49 +253,40 @@ def generate_report(
 
     report = {
         "total_requests": total_requests,
-
         "p50_latency_ms": percentile(total_latencies, 50),
         "p95_latency_ms": percentile(total_latencies, 95),
         "avg_latency_ms": round(statistics.mean(total_latencies), 2)
         if total_latencies
         else 0,
-
         "avg_retrieval_latency_ms": average_or_na(retrieval_latencies),
         "avg_generation_latency_ms": average_or_na(generation_latencies),
-
         "cache_hit_rate": safe_rate(len(cache_hits), total_requests),
         "refusal_rate": safe_rate(len(refused_requests), total_requests),
-
         "llm_request_count": len(llm_requests),
         "extractive_request_count": len(extractive_requests),
         "generator_types": unique_non_empty_values(records, "generator_type"),
         "model_names": unique_non_empty_values(records, "model_name"),
-
         "total_input_tokens": round(total_input_tokens, 2) if input_tokens else "N/A",
         "total_output_tokens": round(total_output_tokens, 2) if output_tokens else "N/A",
         "total_tokens": round(total_all_tokens, 2) if total_tokens else "N/A",
-
         "avg_input_tokens": average_or_na(input_tokens),
         "avg_output_tokens": average_or_na(output_tokens),
         "avg_total_tokens": average_or_na(total_tokens),
-
         "cost_enabled": cost_enabled,
         "currency": currency,
         "input_price_per_1m_tokens": input_price_per_1m_tokens,
         "output_price_per_1m_tokens": output_price_per_1m_tokens,
         "free_quota_enabled": free_quota_enabled,
-
         "reference_total_cost": round(reference_total_cost, 6),
         "reference_cost_per_request": round(reference_cost_per_request, 6),
         "reference_cost_per_1000_calls": round(reference_cost_per_1000_calls, 6),
-
         "estimated_billable_total_cost": round(estimated_billable_total_cost, 6),
         "estimated_billable_cost_per_1000_calls": round(
             estimated_billable_cost_per_1000_calls,
             6,
         ),
-
-        "answer_compliance_rate": "N/A",
+        "answer_compliance_rate": answer_compliance_rate,
+        "answer_compliance_report": answer_compliance_report,
     }
 
     return report
@@ -259,15 +310,25 @@ def main():
 
     config = load_yaml_config(CONFIG_PATH)
 
-    report = generate_report(records, config)
+    answer_compliance_rate, answer_compliance_report = load_latest_answer_compliance_rate()
+
+    report = generate_report(
+        records=records,
+        config=config,
+        answer_compliance_rate=answer_compliance_rate,
+        answer_compliance_report=answer_compliance_report,
+    )
+
     write_csv_report(report, REPORT_PATH)
 
     print("Operations report generated successfully.")
     print(f"Log file: {LOG_PATH}")
     print(f"Config file: {CONFIG_PATH}")
+    print(f"Answer compliance report: {answer_compliance_report}")
     print(f"Report file: {REPORT_PATH}")
     print()
     print("Report summary:")
+
     for key, value in report.items():
         print(f"{key}: {value}")
 

@@ -8,7 +8,7 @@ generator:
 
 llm:
   provider: bailian
-  model: qwen-plus
+  model: qwen-max
   temperature: 0.1
   base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
 
