@@ -2142,3 +2142,268 @@ Final PDF ingestion evaluation result:
 PDF Ingestion Evaluation Formalization is completed.
 
 The project now has reproducible evidence that text-based PDFs are loaded and scanned/no-text PDFs are detected and handled gracefully.
+
+---
+
+## Optimization 034: Advanced Memory v1 Implementation and Evaluation
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Advanced Memory / Multi-turn RAG QA  
+Status: Completed
+
+### Issue / Motivation
+
+The project initially implemented lightweight multi-turn memory.
+
+That version allowed conversation history to be passed to the generator, but retrieval still primarily used the current question. For ambiguous follow-up questions, retrieval could remain under-specified.
+
+Advanced Memory v1 was implemented to strengthen PRD alignment for multi-turn RAG QA.
+
+### Change
+
+Implemented Advanced Memory v1 with:
+
+1. Persistent session memory
+   - file-backed session history
+   - local JSON persistence
+   - max turns per session
+   - max sessions limit
+
+2. History-aware retrieval query rewriting
+   - detects follow-up questions
+   - combines previous question with current follow-up question
+   - uses rewritten query for retrieval
+
+3. Memory observability
+   - `retrieval_query`
+   - `memory_turns_used`
+   - `memory_rewrite_applied`
+   - `memory_rewrite_strategy`
+
+Added:
+
+- `app/rag/query_rewriter.py`
+- enhanced `app/core/session_memory.py`
+- updated `app/api/chat.py`
+- `scripts/evaluate_advanced_memory.py`
+
+### Validation Result
+
+Manual validation confirmed:
+
+- persistent memory file was written
+- two turns were stored under the same session ID
+- second-turn retrieval query included the previous question
+- structured logs recorded memory fields
+
+Formal evaluation result:
+
+- total_cases = 2
+- passing_count = 2
+- pass_rate = 1.0
+- persistent_memory_pass_rate = 1.0
+- query_rewrite_applied_rate = 1.0
+- retrieval_query_resolution_rate = 1.0
+- source_hit_rate = 1.0
+- avg_keyword_hit_rate = 1.0
+- PRD status = PASS
+
+### Related Files
+
+- `app/core/session_memory.py`
+- `app/rag/query_rewriter.py`
+- `app/api/chat.py`
+- `configs/app.yaml`
+- `scripts/evaluate_advanced_memory.py`
+- `reports/evaluations/2026-05-11_advanced_memory_eval.csv`
+- `reports/evaluations/2026-05-11_advanced_memory_eval.md`
+- `reports/diagnosis/2026-05-11_advanced_memory_v1_evaluation_report.md`
+
+### Final Conclusion
+
+Advanced Memory v1 is completed.
+
+The project now supports persistent session memory, history-aware retrieval query rewriting, memory observability, and formal advanced memory evaluation.
+
+---
+
+## Optimization 035: OCR Extraction for Scanned PDFs
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: PDF Ingestion / OCR Extraction / Retrieval  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD states that the internal knowledge base may include a small portion of scanned PDFs.
+
+Earlier implementation supported scanned PDF detection and graceful handling, but scanned/image-only PDF text was not extracted or searchable.
+
+### Change
+
+Implemented OCR extraction for scanned/image-only PDF pages.
+
+Updated files:
+
+- `app/ingestion/loader.py`
+- `app/ingestion/chunker.py`
+- `scripts/ingest.py`
+- `scripts/evaluate_ingestion_pdf_handling.py`
+- `configs/app.yaml`
+
+New behavior:
+
+- text-based PDFs use pypdf extraction
+- no-text PDF pages are treated as OCR candidates
+- OCR pages are rendered with PyMuPDF
+- Tesseract OCR extracts text from rendered images
+- OCR text is included in documents
+- OCR text is chunked, embedded, and written to Chroma
+- OCR text can be retrieved through the normal retriever
+
+### Validation Result
+
+OCR environment:
+
+- Tesseract version = 5.4.0.20240606
+- OCR available = True
+
+Ingestion result:
+
+- loaded_documents = 10
+- generated_chunks = 32
+- PDF files checked = 2
+- scanned_pdf_candidates = 1
+- PDFs with OCR performed = 1
+- PDFs with OCR succeeded = 1
+
+Scanned PDF result:
+
+- file = 99_scanned_pdf_detection_test.pdf
+- status = loaded_with_ocr
+- OCR performed = True
+- OCR succeeded = True
+- extracted_chars = 131
+
+Retrieval validation:
+
+- query = API Key incidents must be reported within 24 hours
+- top result = 99_scanned_pdf_detection_test.pdf
+- retrieval rank = 1
+
+Formal PDF/OCR evaluation result:
+
+- total_cases = 2
+- passing_count = 2
+- pass_rate = 1.0
+- retrieval_hit_rate = 1.0
+- PRD status = PASS
+
+### Related Files
+
+- `app/ingestion/loader.py`
+- `app/ingestion/chunker.py`
+- `scripts/ingest.py`
+- `scripts/evaluate_ingestion_pdf_handling.py`
+- `reports/ingestion/scanned_pdf_detection_report.json`
+- `reports/ingestion/scanned_pdf_detection_report.md`
+- `reports/evaluations/2026-05-11_pdf_ingestion_eval.csv`
+- `reports/evaluations/2026-05-11_pdf_ingestion_eval.md`
+- `reports/diagnosis/2026-05-11_ocr_extraction_evaluation_report.md`
+
+### Final Conclusion
+
+OCR Extraction for Scanned PDFs is completed.
+
+The project now supports OCR extraction, OCR text embedding, and OCR text retrieval for scanned/image-only PDFs in the current MVP scope.
+
+---
+
+## Optimization 036: Operations Report Runtime Sample Enhancement
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Operations Report / Runtime Observability  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires a minimal operations report with latency, token usage, cache hit rate, refusal rate, and answer compliance rate.
+
+The previous operations report had all required fields but was generated from a very small runtime sample:
+
+    total_requests = 1
+
+This made the operations report less representative.
+
+### Change
+
+Generated a controlled runtime sample covering:
+
+- normal answer
+- cache hit
+- multi-turn memory rewrite
+- PII redaction
+- OCR-related query
+- safety refusal
+- out-of-scope refusal
+
+The runtime log was regenerated:
+
+- `logs/rag_service.jsonl`
+
+The operations report was regenerated:
+
+- `reports/operations_report.csv`
+
+### Validation Result
+
+Runtime sample coverage:
+
+- total_logs = 9
+- cache_hits = 3
+- refusals = 2
+- memory_rewrites = 1
+
+Updated operations report:
+
+- total_requests = 9
+- p50_latency_ms = 751
+- p95_latency_ms = 3355
+- avg_latency_ms = 885.56
+- cache_hit_rate = 0.3333
+- refusal_rate = 0.2222
+- total_tokens = 6338
+- avg_total_tokens = 792.25
+- reference_cost_per_1000_calls = 0.320711
+- estimated_billable_cost_per_1000_calls = 0.0
+- answer_compliance_rate = 1.0
+
+One-click summary now includes:
+
+- total_requests = 9
+- p50_latency_ms = 751
+- p95_latency_ms = 3355
+- avg_latency_ms = 885.56
+- avg_total_tokens = 792.25
+- reference_cost_per_1000_calls = 0.320711
+- estimated_billable_cost_per_1000_calls = 0.0
+- answer_compliance_rate = 1.0
+
+### Related Files
+
+- `logs/rag_service.jsonl`
+- `logs/archive/rag_service_before_operations_sample_2026-05-11.jsonl`
+- `scripts/generate_operations_sample_logs.py`
+- `scripts/generate_report.py`
+- `reports/operations_report.csv`
+- `reports/evaluations/2026-05-11_all_evaluations_summary.csv`
+- `reports/diagnosis/2026-05-11_operations_report_runtime_sample_enhancement_report.md`
+
+### Final Conclusion
+
+Operations Report Runtime Sample Enhancement is completed.
+
+The operations report now uses a more representative runtime sample and better supports the PRD observability requirement.

@@ -1,0 +1,26 @@
+{
+  "max_turns": 3,
+  "max_sessions": 100,
+  "sessions": {
+    "eval-advanced-memory-audit-001": [
+      {
+        "question": "What are the audit logging requirements?",
+        "answer": "Systems handling confidential or restricted data must record audit logs for important actions, including login, permission changes, data export, configuration updates, and administrative operations. Audit logs must include the following information:\n- Timestamp\n- User identity\n- Action type\n- Target resource\n- Request ID\n- Result status"
+      },
+      {
+        "question": "How long should they be retained?",
+        "answer": "Audit logs for privileged operations should be retained for at least one year. Operational logs should be retained for at least 90 days unless a longer retention period is required by legal, security, or business requirements."
+      }
+    ],
+    "eval-advanced-memory-apikey-001": [
+      {
+        "question": "API Key 泄露后应该怎么处理？",
+        "answer": "如果发现 API Key 泄露，相关团队必须立即吊销旧的 API Key，生成新的 API Key，并在 24 小时内提交安全事件报告。同时，如果员工怀疑 API Key 已经泄露，也必须在 24 小时内向 Security Operations 团队报告。"
+      },
+      {
+        "question": "多久内要报告？",
+        "answer": "如果员工怀疑 API Key 已经泄露，必须在 24 小时内向 Security Operations 团队报告。"
+      }
+    ]
+  }
+}

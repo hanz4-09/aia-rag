@@ -437,3 +437,98 @@ Updated Phase 3 status:
     Functionally complete
     All PRD metrics passed
     Remaining work is optional future enhancement
+
+---
+
+## 10. Advanced Memory v1 Update
+
+After the initial lightweight multi-turn memory implementation, the project was further enhanced with Advanced Memory v1.
+
+Completed capabilities:
+
+- persistent session memory
+- local JSON-backed session storage
+- history-aware retrieval query rewriting
+- follow-up question detection
+- previous-question + current-question retrieval query construction
+- memory observability in structured logs
+
+Structured log fields added:
+
+- retrieval_query
+- memory_turns_used
+- memory_rewrite_applied
+- memory_rewrite_strategy
+
+Formal evaluation:
+
+    scripts/evaluate_advanced_memory.py
+
+Final result:
+
+    total_cases = 2
+    passing_count = 2
+    pass_rate = 1.0
+    persistent_memory_pass_rate = 1.0
+    query_rewrite_applied_rate = 1.0
+    retrieval_query_resolution_rate = 1.0
+    source_hit_rate = 1.0
+    avg_keyword_hit_rate = 1.0
+    PRD Status = PASS
+
+Current status:
+
+    Advanced Memory v1: Completed
+
+Remaining future enhancement:
+
+    Production-grade distributed memory
+
+This means the project now supports advanced memory at MVP level, while distributed multi-instance memory remains future work.
+
+---
+
+## 11. OCR Extraction Update
+
+The project was further enhanced from scanned PDF detection/graceful handling to actual OCR extraction.
+
+Completed capabilities:
+
+- text-based PDF loading
+- scanned/image-only PDF detection
+- OCR extraction using Tesseract
+- PDF page rendering for OCR
+- OCR text included in loaded documents
+- OCR text chunked and embedded
+- OCR text written to Chroma
+- OCR text retrievable by the RAG retriever
+
+OCR backend:
+
+    Tesseract OCR 5.4.0.20240606
+
+Formal evaluation:
+
+    scripts/evaluate_ingestion_pdf_handling.py
+
+Final result:
+
+    total_cases = 2
+    passing_count = 2
+    pass_rate = 1.0
+    pdf_files_checked = 2
+    scanned_pdf_candidates = 1
+    pdfs_with_ocr_performed = 1
+    pdfs_with_ocr_succeeded = 1
+    retrieval_hit_rate = 1.0
+    loaded_documents = 10
+    skipped_empty_documents = 0
+    PRD Status = PASS
+
+Current status:
+
+    OCR extraction: Completed
+
+Remaining future enhancement:
+
+    Production-grade OCR hardening, including multilingual OCR packs, OCR confidence logging, preprocessing, and containerized Tesseract runtime.

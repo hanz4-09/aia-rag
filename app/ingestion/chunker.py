@@ -1,6 +1,45 @@
-from typing import Dict, List
+import json
+from typing import Any, Dict, List
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+
+def _sanitize_metadata_value(value: Any) -> Any:
+    """
+    Chroma metadata supports only primitive values or simple primitive lists.
+
+    Nested dict/list metadata such as page-level OCR results must be converted
+    to JSON strings before writing to Chroma.
+    """
+    if value is None:
+        return ""
+
+    if isinstance(value, (str, int, float, bool)):
+        return value
+
+    if isinstance(value, list):
+        if all(isinstance(item, str) for item in value):
+            return value
+        if all(isinstance(item, int) for item in value):
+            return value
+        if all(isinstance(item, float) for item in value):
+            return value
+        if all(isinstance(item, bool) for item in value):
+            return value
+
+        return json.dumps(value, ensure_ascii=False)
+
+    if isinstance(value, dict):
+        return json.dumps(value, ensure_ascii=False)
+
+    return str(value)
+
+
+def _sanitize_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        key: _sanitize_metadata_value(value)
+        for key, value in metadata.items()
+    }
 
 
 def split_documents(
@@ -32,6 +71,7 @@ def split_documents(
                 "chunk_index": index,
             }
             metadata.update(document_metadata)
+            metadata = _sanitize_metadata(metadata)
 
             chunks.append(
                 {

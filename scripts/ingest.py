@@ -31,9 +31,15 @@ def write_scanned_pdf_detection_report(report: Dict[str, Any]) -> None:
     partial_candidates = [
         item for item in pdf_results if item.get("partial_scanned_pdf_candidate")
     ]
+    ocr_performed = [
+        item for item in pdf_results if item.get("ocr_performed")
+    ]
+    ocr_succeeded = [
+        item for item in pdf_results if item.get("ocr_succeeded")
+    ]
 
     lines = [
-        "# Scanned PDF Detection Report",
+        "# PDF Detection and OCR Report",
         "",
         "Project: AIA RAG Case Study Service",
         "Report Type: Ingestion Diagnostics",
@@ -46,13 +52,14 @@ def write_scanned_pdf_detection_report(report: Dict[str, Any]) -> None:
         f"- PDF files checked: {len(pdf_results)}",
         f"- Scanned PDF candidates: {len(scanned_candidates)}",
         f"- Partial scanned PDF candidates: {len(partial_candidates)}",
+        f"- PDFs with OCR performed: {len(ocr_performed)}",
+        f"- PDFs with OCR succeeded: {len(ocr_succeeded)}",
         "",
         "## Notes",
         "",
-        "- OCR is not performed in the current implementation.",
         "- Text-based PDFs are loaded using pypdf text extraction.",
-        "- PDFs with no extractable text are detected and skipped gracefully.",
-        "- PDFs with some low-text pages are loaded with a warning.",
+        "- Scanned/no-text PDF pages can be rendered and processed by OCR when OCR is enabled and Tesseract is available.",
+        "- OCR result availability depends on local Tesseract installation and configured language data.",
         "",
         "## PDF Details",
         "",
@@ -72,15 +79,42 @@ def write_scanned_pdf_detection_report(report: Dict[str, Any]) -> None:
                     f"- Pages without text: {item.get('pages_without_text')}",
                     f"- Extracted characters: {item.get('extracted_chars')}",
                     f"- Scanned PDF candidate: {item.get('scanned_pdf_candidate')}",
-                    "- OCR performed: False",
+                    f"- OCR enabled: {item.get('ocr_enabled')}",
+                    f"- OCR available: {item.get('ocr_available')}",
+                    f"- OCR performed: {item.get('ocr_performed')}",
+                    f"- OCR succeeded: {item.get('ocr_succeeded')}",
+                    f"- Pages OCR attempted: {item.get('pages_ocr_attempted')}",
+                    f"- Pages OCR succeeded: {item.get('pages_ocr_succeeded')}",
+                    f"- OCR status: {item.get('ocr_status')}",
                     "",
                 ]
             )
 
+            page_results = item.get("page_results") or []
+            if page_results:
+                lines.append("Page-level results:")
+                lines.append("")
+                for page in page_results:
+                    lines.append(
+                        "- Page {page_index}: method={method}, "
+                        "pypdf_chars={pypdf_chars}, "
+                        "ocr_performed={ocr_performed}, "
+                        "ocr_chars={ocr_chars}, "
+                        "ocr_error={ocr_error}".format(
+                            page_index=page.get("page_index"),
+                            method=page.get("extraction_method"),
+                            pypdf_chars=page.get("pypdf_chars"),
+                            ocr_performed=page.get("ocr_performed"),
+                            ocr_chars=page.get("ocr_chars"),
+                            ocr_error=page.get("ocr_error"),
+                        )
+                    )
+                lines.append("")
+
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
-    print(f"Scanned PDF detection JSON report: {json_path}")
-    print(f"Scanned PDF detection Markdown report: {md_path}")
+    print(f"PDF detection/OCR JSON report: {json_path}")
+    print(f"PDF detection/OCR Markdown report: {md_path}")
 
 
 def main():
@@ -92,6 +126,7 @@ def main():
     documents, ingestion_report = load_documents_from_directory(
         str(raw_dir),
         return_report=True,
+        ocr_config=config.get("ocr", {}),
     )
 
     write_scanned_pdf_detection_report(ingestion_report)

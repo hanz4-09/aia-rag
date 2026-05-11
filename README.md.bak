@@ -329,7 +329,7 @@ Final results:
 
 - Answer Compliance Rate: 1.0
 - Refusal Appropriateness Pass Rate: 1.0
-- Avg Context Precision: 0.9807
+- Avg Context Precision: 0.9717
 - Avg Faithfulness: 1.0
 - Avg Style Consistency: 0.994
 - Latency Within 10s Rate: 0.9667
@@ -358,9 +358,9 @@ Current known caveats:
 2. Some evaluation scripts call the pipeline directly and may not write to runtime logs.
 3. qwen-max has higher latency and cost than lower-tier models.
 4. One latency evaluation request exceeded 10 seconds, but the overall within-10s rate still passed the PRD target.
-5. Context Precision regression has been resolved through cross-lingual keyword alignment; final passing count is 28/28 and avg context precision is 0.9807.
-6. Cache behavior is formally evaluated with first-cache-miss and second-cache-hit validation.
-7. OCR extraction for scanned/image-only PDFs is implemented and formally evaluated.
+5. Context Precision had one local regression from 28/28 to 27/28 in the final qwen-max run, but the average score remained far above target.
+6. Cache is not a major Phase 3 optimization target.
+7. OCR for scanned PDFs is not implemented.
 
 ## 17. Future Work
 
@@ -374,115 +374,3 @@ Potential next steps:
 6. Add OCR support for scanned PDFs.
 7. Add model selection guidance for quality, latency, and cost trade-offs.
 
-## Phase 3 Final Status
-
-Current phase: Phase 3 completed  
-Final validation model: qwen-max  
-One-click evaluation tasks: 12
-
-### Completed Capabilities
-
-- LLM-based RAG answer generation
-- Vector retrieval, hybrid retrieval, and reranker configuration
-- Safety refusal handling
-- Low-confidence and no-context refusal handling
-- Basic PII redaction for answers and logs
-- Structured JSONL logging
-- Operations report generation
-- Rule-based answer compliance evaluation
-- Refusal appropriateness evaluation
-- Context precision evaluation
-- Faithfulness LLM-as-judge evaluation
-- Style consistency LLM-as-judge evaluation
-- Sequential latency evaluation
-- 5-concurrent-request evaluation
-- Cache behavior evaluation
-- Lightweight multi-turn QA evaluation
-- Advanced Memory v1
-- Text-based PDF ingestion
-- OCR extraction for scanned/image-only PDFs
-- PDF/OCR ingestion and retrieval evaluation
-- One-click evaluation summary
-- Issue diagnosis summary with before/after improvements
-
-### Final Evaluation Snapshot
-
-| Area | Final Result |
-|---|---:|
-| Answer Compliance Rate | 1.0 |
-| Refusal Appropriateness Pass Rate | 1.0 |
-| Avg Context Precision | 0.9807 |
-| Avg Faithfulness | 1.0 |
-| Avg Style Consistency | 0.994 |
-| Multi-turn QA Pass Rate | 1.0 |
-| Advanced Memory Pass Rate | 1.0 |
-| Cache Evaluation Pass Rate | 1.0 |
-| PDF/OCR Ingestion Pass Rate | 1.0 |
-| OCR Retrieval Hit Rate | 1.0 |
-| Latency Within 10s Rate | 0.9667 |
-| Concurrency Success Rate | 1.0 |
-| Concurrency Within 10s Rate | 1.0 |
-
-### Advanced Memory v1
-
-Advanced Memory v1 is implemented and formally evaluated.
-
-Implemented capabilities:
-
-- persistent session memory
-- local JSON-backed session storage
-- history-aware retrieval query rewriting
-- follow-up question detection
-- previous-question + current-question retrieval query construction
-- memory observability in structured logs
-
-Formal evaluation:
-
-- Script: `scripts/evaluate_advanced_memory.py`
-- Report: `reports/evaluations/2026-05-11_advanced_memory_eval.csv`
-- Pass rate: 1.0
-- Persistent memory pass rate: 1.0
-- Query rewrite applied rate: 1.0
-- Retrieval query resolution rate: 1.0
-
-Remaining future enhancement:
-
-- production-grade distributed memory using Redis, PostgreSQL, or another shared backend
-
-### OCR Extraction
-
-OCR extraction for scanned/image-only PDFs is implemented and formally evaluated.
-
-Implemented capabilities:
-
-- scanned/image-only PDF detection
-- PDF page rendering for OCR
-- Tesseract OCR extraction
-- OCR text included in loaded documents
-- OCR text chunked and embedded
-- OCR text written to Chroma
-- OCR text retrievable by the RAG retriever
-
-Formal evaluation:
-
-- Script: `scripts/evaluate_ingestion_pdf_handling.py`
-- Report: `reports/evaluations/2026-05-11_pdf_ingestion_eval.csv`
-- Pass rate: 1.0
-- PDFs with OCR performed: 1
-- PDFs with OCR succeeded: 1
-- Retrieval hit rate: 1.0
-
-Remaining future enhancement:
-
-- production-grade OCR hardening, including multilingual OCR packs, OCR confidence logging, preprocessing, and containerized Tesseract runtime
-
-### Current Limitations / Future Work
-
-The following items are future enhancements rather than current PRD blockers:
-
-- production-grade distributed memory for multi-instance deployments
-- production-grade OCR hardening and multilingual OCR support
-- larger multi-turn and OCR evaluation sets
-- richer PII evaluation coverage
-- production observability dashboards
-- larger runtime operations-report sample size

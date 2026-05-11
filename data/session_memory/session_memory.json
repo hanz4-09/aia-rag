@@ -1,0 +1,44 @@
+{
+  "max_turns": 3,
+  "max_sessions": 1000,
+  "sessions": {
+    "advanced-memory-demo-001": [
+      {
+        "question": "What are the audit logging requirements?",
+        "answer": "Systems handling confidential or restricted data must record audit logs for important actions, including login, permission changes, data export, configuration updates, and administrative operations. Audit logs must include the following information:\n- Timestamp\n- User identity\n- Action type\n- Target resource\n- Request ID\n- Result status"
+      },
+      {
+        "question": "How long should they be retained?",
+        "answer": "Audit logs for privileged operations should be retained for at least one year. Operational logs should be retained for at least 90 days unless a longer retention period is required by legal, security, or business requirements."
+      }
+    ],
+    "ops-sample-normal-001": [
+      {
+        "question": "What are the audit logging requirements?",
+        "answer": "Audit logging requirements include:\n\n- Systems handling confidential or restricted data must record audit logs for important actions, such as:\n  - Login\n  - Permission changes\n  - Data export\n  - Configuration updates\n  - Administrative operations\n\n- Audit logs must include the following details:\n  - Timestamp\n  - User identity\n  - Action type\n  - Target resource\n  - Request ID\n  - Result status"
+      }
+    ],
+    "ops-sample-multiturn-001": [
+      {
+        "question": "What are the audit logging requirements?",
+        "answer": "Audit logging requirements include:\n\n- Systems handling confidential or restricted data must record audit logs for important actions, such as:\n  - Login\n  - Permission changes\n  - Data export\n  - Configuration updates\n  - Administrative operations\n\n- Audit logs must include the following details:\n  - Timestamp\n  - User identity\n  - Action type\n  - Target resource\n  - Request ID\n  - Result status"
+      },
+      {
+        "question": "How long should they be retained?",
+        "answer": "Audit logs for privileged operations should be retained for at least one year."
+      }
+    ],
+    "ops-sample-pii-001": [
+      {
+        "question": "My email is [EMAIL] and phone is [PHONE]. What is the data retention policy?",
+        "answer": "The data retention policy for operational logs is to retain them for at least 90 days, unless a longer retention period is required by legal, security, or business requirements. For audit logs related to privileged operations, the retention period should be at least one year."
+      }
+    ],
+    "ops-sample-ocr-001": [
+      {
+        "question": "What does the scanned OCR test document say about API Key incidents?",
+        "answer": "The scanned OCR test document states that API Key incidents must be reported within 24 hours."
+      }
+    ]
+  }
+}

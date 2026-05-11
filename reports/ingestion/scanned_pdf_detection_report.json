@@ -1,8 +1,8 @@
 {
   "raw_dir": "C:\\Users\\dx\\OneDrive\\aia-rag\\data\\raw",
   "supported_files_seen": 10,
-  "loaded_documents": 9,
-  "skipped_empty_documents": 1,
+  "loaded_documents": 10,
+  "skipped_empty_documents": 0,
   "pdf_detection_results": [
     {
       "filename": "98_text_pdf_detection_test.pdf",
@@ -14,19 +14,53 @@
       "extracted_chars": 100,
       "scanned_pdf_candidate": false,
       "partial_scanned_pdf_candidate": false,
-      "ocr_performed": false
+      "ocr_enabled": true,
+      "ocr_available": true,
+      "ocr_status": "Tesseract available: 5.4.0.20240606",
+      "ocr_performed": false,
+      "ocr_succeeded": false,
+      "pages_ocr_attempted": 0,
+      "pages_ocr_succeeded": 0,
+      "page_results": [
+        {
+          "page_index": 0,
+          "has_text_layer": true,
+          "pypdf_chars": 100,
+          "ocr_performed": false,
+          "ocr_chars": 0,
+          "ocr_error": null,
+          "extraction_method": "pypdf"
+        }
+      ]
     },
     {
       "filename": "99_scanned_pdf_detection_test.pdf",
       "source": "C:\\Users\\dx\\OneDrive\\aia-rag\\data\\raw\\99_scanned_pdf_detection_test.pdf",
-      "status": "skipped_no_extractable_text",
+      "status": "loaded_with_ocr",
       "total_pages": 1,
       "pages_with_text": 0,
       "pages_without_text": 1,
-      "extracted_chars": 0,
+      "extracted_chars": 131,
       "scanned_pdf_candidate": true,
       "partial_scanned_pdf_candidate": true,
-      "ocr_performed": false
+      "ocr_enabled": true,
+      "ocr_available": true,
+      "ocr_status": "Tesseract available: 5.4.0.20240606",
+      "ocr_performed": true,
+      "ocr_succeeded": true,
+      "pages_ocr_attempted": 1,
+      "pages_ocr_succeeded": 1,
+      "page_results": [
+        {
+          "page_index": 0,
+          "has_text_layer": false,
+          "pypdf_chars": 0,
+          "ocr_performed": true,
+          "ocr_chars": 131,
+          "ocr_error": null,
+          "extraction_method": "ocr"
+        }
+      ]
     }
   ]
 }

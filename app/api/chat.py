@@ -7,9 +7,10 @@ from fastapi import APIRouter
 from app.core.cache import InMemoryCache, build_cache_key
 from app.core.config import load_config
 from app.core.logger import write_json_log
-from app.core.session_memory import InMemorySessionMemory
+from app.core.session_memory import create_session_memory
 from app.rag.generator import create_generator
 from app.rag.pii import redact_pii
+from app.rag.query_rewriter import build_history_aware_retrieval_query
 from app.rag.retriever_factory import create_retriever
 from app.rag.safety import check_safety
 from app.schemas.request import ChatRequest
@@ -25,10 +26,9 @@ generator = create_generator(config)
 cache_config = config.get("cache", {})
 cache_enabled = cache_config.get("enabled", False)
 cache = InMemoryCache(ttl_seconds=cache_config.get("ttl_seconds", 300))
+
 memory_config = config.get("memory", {})
-session_memory = InMemorySessionMemory(
-    max_turns=memory_config.get("max_turns", 3)
-)
+session_memory = create_session_memory(config)
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -55,6 +55,10 @@ def chat(request: ChatRequest):
             request_id=request_id,
             session_id=request.session_id,
             query=redacted_question,
+            retrieval_query=redacted_question,
+            memory_turns_used=0,
+            memory_rewrite_applied=False,
+            memory_rewrite_strategy="safety_refusal",
             retrieved_chunks=[],
             generation_result={
                 "refused": True,
@@ -75,9 +79,28 @@ def chat(request: ChatRequest):
 
         return response
 
+    conversation_history = session_memory.get_history(request.session_id)
+
+    rewrite_result = {
+        "retrieval_query": redacted_question,
+        "memory_rewrite_applied": False,
+        "rewrite_strategy": "disabled",
+    }
+
+    if memory_config.get("enable_query_rewrite", False):
+        rewrite_result = build_history_aware_retrieval_query(
+            question=redacted_question,
+            conversation_history=conversation_history,
+        )
+
+    retrieval_query = str(rewrite_result["retrieval_query"])
+    memory_rewrite_applied = bool(rewrite_result["memory_rewrite_applied"])
+    memory_rewrite_strategy = str(rewrite_result["rewrite_strategy"])
+    memory_turns_used = len(conversation_history)
+
     cache_hit = False
     cache_key = build_cache_key(
-        question=request.question,
+        question=retrieval_query,
         retrieval_mode=config["retrieval"]["mode"],
         reranker_enabled=config["retrieval"].get("enable_reranker", False),
         top_k=config["retrieval"].get("top_k", 5),
@@ -98,10 +121,21 @@ def chat(request: ChatRequest):
                 latency_ms=total_latency_ms,
             )
 
+            if not cached_response["refused"]:
+                session_memory.add_turn(
+                    session_id=request.session_id,
+                    question=redacted_question,
+                    answer=cached_response["answer"],
+                )
+
             log_record = _build_log_record_from_sources(
                 request_id=request_id,
                 session_id=request.session_id,
                 query=redacted_question,
+                retrieval_query=retrieval_query,
+                memory_turns_used=memory_turns_used,
+                memory_rewrite_applied=memory_rewrite_applied,
+                memory_rewrite_strategy=memory_rewrite_strategy,
                 sources=cached_response["sources"],
                 generation_result=cached_response,
                 total_latency_ms=total_latency_ms,
@@ -113,14 +147,12 @@ def chat(request: ChatRequest):
             return response
 
     retrieval_start = time.time()
-    retrieved_chunks = retriever.retrieve(request.question)
+    retrieved_chunks = retriever.retrieve(retrieval_query)
     retrieval_latency_ms = int((time.time() - retrieval_start) * 1000)
-
-    conversation_history = session_memory.get_history(request.session_id)
 
     generation_start = time.time()
     generation_result = generator.generate(
-        question=request.question,
+        question=redacted_question,
         retrieved_chunks=retrieved_chunks,
         conversation_history=conversation_history,
     )
@@ -158,6 +190,7 @@ def chat(request: ChatRequest):
                 "total_tokens": generation_result.get("total_tokens"),
                 "model_name": generation_result.get("model_name"),
                 "generator_type": generation_result.get("generator_type"),
+                "context_chunks_used": generation_result.get("context_chunks_used"),
             },
         )
 
@@ -165,6 +198,10 @@ def chat(request: ChatRequest):
         request_id=request_id,
         session_id=request.session_id,
         query=redacted_question,
+        retrieval_query=retrieval_query,
+        memory_turns_used=memory_turns_used,
+        memory_rewrite_applied=memory_rewrite_applied,
+        memory_rewrite_strategy=memory_rewrite_strategy,
         retrieved_chunks=retrieved_chunks,
         generation_result=generation_result,
         retrieval_latency_ms=retrieval_latency_ms,
@@ -182,6 +219,10 @@ def _build_log_record(
     request_id: str,
     session_id: str | None,
     query: str,
+    retrieval_query: str,
+    memory_turns_used: int,
+    memory_rewrite_applied: bool,
+    memory_rewrite_strategy: str,
     retrieved_chunks: list[Dict[str, Any]],
     generation_result: Dict[str, Any],
     retrieval_latency_ms: int,
@@ -193,6 +234,10 @@ def _build_log_record(
         "request_id": request_id,
         "session_id": session_id,
         "query": query,
+        "retrieval_query": retrieval_query,
+        "memory_turns_used": memory_turns_used,
+        "memory_rewrite_applied": memory_rewrite_applied,
+        "memory_rewrite_strategy": memory_rewrite_strategy,
         "retrieval_mode": config["retrieval"]["mode"],
         "reranker_enabled": config["retrieval"].get("enable_reranker", False),
         "top_k": config["retrieval"].get("top_k", 5),
@@ -247,6 +292,10 @@ def _build_log_record_from_sources(
     request_id: str,
     session_id: str | None,
     query: str,
+    retrieval_query: str,
+    memory_turns_used: int,
+    memory_rewrite_applied: bool,
+    memory_rewrite_strategy: str,
     sources: list[Dict[str, Any]],
     generation_result: Dict[str, Any],
     total_latency_ms: int,
@@ -256,6 +305,10 @@ def _build_log_record_from_sources(
         "request_id": request_id,
         "session_id": session_id,
         "query": query,
+        "retrieval_query": retrieval_query,
+        "memory_turns_used": memory_turns_used,
+        "memory_rewrite_applied": memory_rewrite_applied,
+        "memory_rewrite_strategy": memory_rewrite_strategy,
         "retrieval_mode": config["retrieval"]["mode"],
         "reranker_enabled": config["retrieval"].get("enable_reranker", False),
         "top_k": config["retrieval"].get("top_k", 5),

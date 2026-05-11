@@ -24,28 +24,142 @@ def load_docx(file_path: Path) -> str:
     return "\n".join(paragraphs)
 
 
-def load_pdf_with_detection(file_path: Path) -> Tuple[str, Dict[str, Any]]:
-    """
-    Load text from a PDF and detect pages that may be scanned images.
+def _configure_tesseract(ocr_config: Dict[str, Any]) -> None:
+    tesseract_cmd = ocr_config.get("tesseract_cmd")
 
-    This function does not perform OCR. It uses pypdf text extraction and
-    records detection metadata so scanned PDFs can be handled gracefully.
+    if not tesseract_cmd:
+        return
+
+    try:
+        import pytesseract
+
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+    except Exception:
+        return
+
+
+def _is_ocr_available(ocr_config: Dict[str, Any]) -> Tuple[bool, str | None]:
+    if not ocr_config.get("enabled", False):
+        return False, "OCR disabled by config."
+
+    try:
+        import fitz  # PyMuPDF  # noqa: F401
+        import pytesseract
+        from PIL import Image  # noqa: F401
+    except Exception as exc:
+        return False, f"OCR Python dependencies unavailable: {exc}"
+
+    _configure_tesseract(ocr_config)
+
+    try:
+        version = pytesseract.get_tesseract_version()
+        return True, f"Tesseract available: {version}"
+    except Exception as exc:
+        return False, f"Tesseract executable unavailable: {exc}"
+
+
+def _ocr_pdf_page(
+    file_path: Path,
+    page_index: int,
+    ocr_config: Dict[str, Any],
+) -> str:
+    import fitz
+    import pytesseract
+    from PIL import Image
+
+    render_dpi = int(ocr_config.get("render_dpi", 220))
+    language = ocr_config.get("language", "eng")
+
+    zoom = render_dpi / 72
+    matrix = fitz.Matrix(zoom, zoom)
+
+    with fitz.open(str(file_path)) as doc:
+        page = doc.load_page(page_index)
+        pixmap = page.get_pixmap(matrix=matrix, alpha=False)
+
+    image = Image.frombytes(
+        "RGB",
+        [pixmap.width, pixmap.height],
+        pixmap.samples,
+    )
+
+    text = pytesseract.image_to_string(image, lang=language) or ""
+    return text.strip()
+
+
+def load_pdf_with_detection(
+    file_path: Path,
+    ocr_config: Dict[str, Any] | None = None,
+) -> Tuple[str, Dict[str, Any]]:
     """
+    Load text from PDF.
+
+    Behavior:
+    - First use pypdf text extraction.
+    - If a page has no/low extractable text and OCR is enabled,
+      render the page and run Tesseract OCR.
+    - Record page-level detection and OCR metadata.
+    """
+    ocr_config = ocr_config or {}
     reader = PdfReader(str(file_path))
 
+    ocr_available, ocr_status = _is_ocr_available(ocr_config)
+
     pages = []
+    page_results = []
+
     pages_with_text = 0
     pages_without_text = 0
+    pages_ocr_attempted = 0
+    pages_ocr_succeeded = 0
 
-    for page in reader.pages:
-        text = page.extract_text() or ""
-        text = text.strip()
+    min_ocr_chars = int(ocr_config.get("min_ocr_chars", 10))
 
-        if len(text) >= MIN_EXTRACTED_CHARS_PER_PAGE:
-            pages.append(text)
+    for page_index, page in enumerate(reader.pages):
+        extracted_text = (page.extract_text() or "").strip()
+        extraction_method = "pypdf"
+        ocr_text = ""
+        ocr_error = None
+        ocr_performed = False
+
+        has_text_layer = len(extracted_text) >= MIN_EXTRACTED_CHARS_PER_PAGE
+
+        if has_text_layer:
+            pages.append(extracted_text)
             pages_with_text += 1
         else:
             pages_without_text += 1
+
+            if ocr_available:
+                pages_ocr_attempted += 1
+                ocr_performed = True
+
+                try:
+                    ocr_text = _ocr_pdf_page(
+                        file_path=file_path,
+                        page_index=page_index,
+                        ocr_config=ocr_config,
+                    )
+                except Exception as exc:
+                    ocr_error = str(exc)
+                    ocr_text = ""
+
+                if len(ocr_text.strip()) >= min_ocr_chars:
+                    extraction_method = "ocr"
+                    pages.append(ocr_text.strip())
+                    pages_ocr_succeeded += 1
+
+        page_results.append(
+            {
+                "page_index": page_index,
+                "has_text_layer": has_text_layer,
+                "pypdf_chars": len(extracted_text),
+                "ocr_performed": ocr_performed,
+                "ocr_chars": len(ocr_text.strip()),
+                "ocr_error": ocr_error,
+                "extraction_method": extraction_method,
+            }
+        )
 
     total_pages = len(reader.pages)
     extracted_text = "\n".join(pages).strip()
@@ -53,6 +167,8 @@ def load_pdf_with_detection(file_path: Path) -> Tuple[str, Dict[str, Any]]:
 
     scanned_candidate = total_pages > 0 and pages_with_text == 0
     partial_scanned_candidate = total_pages > 0 and pages_without_text > 0
+    ocr_performed_any = pages_ocr_attempted > 0
+    ocr_succeeded = pages_ocr_succeeded > 0
 
     metadata = {
         "file_type": "pdf",
@@ -62,13 +178,23 @@ def load_pdf_with_detection(file_path: Path) -> Tuple[str, Dict[str, Any]]:
         "extracted_chars": extracted_chars,
         "scanned_pdf_candidate": scanned_candidate,
         "partial_scanned_pdf_candidate": partial_scanned_candidate,
-        "ocr_performed": False,
+        "ocr_enabled": bool(ocr_config.get("enabled", False)),
+        "ocr_available": ocr_available,
+        "ocr_status": ocr_status,
+        "ocr_performed": ocr_performed_any,
+        "ocr_succeeded": ocr_succeeded,
+        "pages_ocr_attempted": pages_ocr_attempted,
+        "pages_ocr_succeeded": pages_ocr_succeeded,
+        "page_results": page_results,
     }
 
     return extracted_text, metadata
 
 
-def load_document(file_path: Path) -> Tuple[str, Dict[str, Any]]:
+def load_document(
+    file_path: Path,
+    ocr_config: Dict[str, Any] | None = None,
+) -> Tuple[str, Dict[str, Any]]:
     suffix = file_path.suffix.lower()
 
     if suffix == ".txt":
@@ -78,7 +204,7 @@ def load_document(file_path: Path) -> Tuple[str, Dict[str, Any]]:
         return load_docx(file_path), {"file_type": "docx"}
 
     if suffix == ".pdf":
-        return load_pdf_with_detection(file_path)
+        return load_pdf_with_detection(file_path, ocr_config=ocr_config)
 
     raise ValueError(f"Unsupported file type: {file_path}")
 
@@ -86,6 +212,7 @@ def load_document(file_path: Path) -> Tuple[str, Dict[str, Any]]:
 def load_documents_from_directory(
     raw_dir: str = "data/raw",
     return_report: bool = False,
+    ocr_config: Dict[str, Any] | None = None,
 ):
     raw_path = Path(raw_dir)
 
@@ -112,7 +239,7 @@ def load_documents_from_directory(
 
         report["supported_files_seen"] += 1
 
-        text, metadata = load_document(file_path)
+        text, metadata = load_document(file_path, ocr_config=ocr_config)
         metadata = dict(metadata)
         metadata["source"] = str(file_path)
         metadata["filename"] = file_path.name
@@ -120,7 +247,9 @@ def load_documents_from_directory(
         if file_path.suffix.lower() == ".pdf":
             status = "loaded"
 
-            if metadata.get("scanned_pdf_candidate"):
+            if metadata.get("ocr_succeeded"):
+                status = "loaded_with_ocr"
+            elif metadata.get("scanned_pdf_candidate") and not text.strip():
                 status = "skipped_no_extractable_text"
             elif metadata.get("partial_scanned_pdf_candidate"):
                 status = "loaded_with_scanned_page_warning"
@@ -137,7 +266,14 @@ def load_documents_from_directory(
                 "partial_scanned_pdf_candidate": metadata.get(
                     "partial_scanned_pdf_candidate"
                 ),
-                "ocr_performed": False,
+                "ocr_enabled": metadata.get("ocr_enabled"),
+                "ocr_available": metadata.get("ocr_available"),
+                "ocr_status": metadata.get("ocr_status"),
+                "ocr_performed": metadata.get("ocr_performed"),
+                "ocr_succeeded": metadata.get("ocr_succeeded"),
+                "pages_ocr_attempted": metadata.get("pages_ocr_attempted"),
+                "pages_ocr_succeeded": metadata.get("pages_ocr_succeeded"),
+                "page_results": metadata.get("page_results"),
             }
             report["pdf_detection_results"].append(pdf_result)
 
