@@ -41,7 +41,7 @@ The dataset covers:
 
 Total questions:
 
-    10
+    30
 
 ---
 
@@ -68,17 +68,17 @@ This is a rule-based baseline evaluation, not an LLM-as-judge evaluation.
 
 | Metric | Value |
 |---|---:|
-| Total Questions | 10 |
-| Rule-based Pass Rate | 1.0 |
+| Total Questions | 30 |
+| Rule-based Pass Rate | 0.9333 |
 | Answer Not Empty Rate | 1.0 |
 | Expected Refusal Match Rate | 1.0 |
 | Refusal Reason Match Rate | 1.0 |
 | Source Hit Rate | 1.0 |
-| Forbidden Keywords Clean Rate | 1.0 |
-| Avg Expected Keywords Hit Rate | 0.95 |
-| Avg Total Latency ms | 1737.0 |
-| Avg Generation Latency ms | 1725.7 |
-| Avg Total Tokens | 926.89 |
+| Forbidden Keywords Clean Rate | 0.9333 |
+| Avg Expected Keywords Hit Rate | 0.9444 |
+| Avg Total Latency ms | 1795.5 |
+| Avg Generation Latency ms | 1782.3 |
+| Avg Total Tokens | 952.17 |
 
 ---
 

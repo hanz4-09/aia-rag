@@ -297,7 +297,40 @@ class LLMGenerator:
         raw_answer = answer.strip()
         normalized_answer = " ".join(raw_answer.lower().split())
 
-        # If the answer is explaining refusal behavior, do not convert it into a refusal.
+        # Case 1:
+        # Short structured refusal-like answer should be converted to system refusal.
+        #
+        # Example:
+        #   refused = true
+        #   refusal_reason = NO_RETRIEVED_CONTEXT
+        #
+        # This is not a normal answer. It means the LLM has effectively produced
+        # a refusal payload in text form, so the system should standardize it.
+        if (
+            len(raw_answer) <= 220
+            and (
+                "no_retrieved_context" in normalized_answer
+                or "no retrieved context" in normalized_answer
+            )
+            and (
+                "refused = true" in normalized_answer
+                or "refused=true" in normalized_answer
+                or "refusal_reason" in normalized_answer
+                or "refusal reason" in normalized_answer
+            )
+        ):
+            return True
+
+        # Case 2:
+        # Long explanatory answers about refusal behavior should not be converted.
+        #
+        # Example:
+        #   系统在以下标准场景下会返回拒答：
+        #   1. SAFETY_RULE_TRIGGERED
+        #   2. NO_RETRIEVED_CONTEXT
+        #   3. LOW_RETRIEVAL_CONFIDENCE
+        #
+        # This kind of answer is explaining refusal behavior, not refusing to answer.
         explanatory_markers = [
             "no_retrieved_context",
             "low_retrieval_confidence",
@@ -320,6 +353,8 @@ class LLMGenerator:
         if any(marker in normalized_answer for marker in explanatory_markers):
             return False
 
+        # Case 3:
+        # Exact English insufficient-context refusals.
         exact_refusal_patterns = [
             "i could not find enough relevant information in the internal knowledge base to answer this question.",
             "i do not have enough information from the internal knowledge base to answer this question.",
@@ -329,6 +364,8 @@ class LLMGenerator:
         if normalized_answer in exact_refusal_patterns:
             return True
 
+        # Case 4:
+        # Exact Chinese insufficient-context refusals.
         chinese_exact_refusal_patterns = [
             "我无法从内部知识库中找到足够相关的信息来回答这个问题。",
             "内部知识库中没有足够相关的信息来回答这个问题。",
@@ -339,6 +376,7 @@ class LLMGenerator:
         if raw_answer in chinese_exact_refusal_patterns:
             return True
 
+        # Case 5:
         # Only short answers should be interpreted as insufficient-context refusals.
         # Long answers may mention "not enough information" while explaining a policy or refusal reason.
         short_answer = len(raw_answer) <= 180
@@ -361,7 +399,6 @@ class LLMGenerator:
         return short_answer and any(
             phrase in normalized_answer for phrase in insufficient_phrases
         )
-
 
 def create_generator(config: Dict[str, Any]):
     generator_config = config.get("generator", {})

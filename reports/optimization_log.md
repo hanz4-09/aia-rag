@@ -651,3 +651,80 @@ The optimization was successful.
 
 The main lesson is that faithfulness gaps should first be solved by improving the internal knowledge base and aligning documentation with actual implementation, rather than applying broad global prompt changes.
 
+---
+
+## Optimization 012: Context Precision PRD Validation and Evaluation Set Alignment
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Context Precision / Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires Context Precision >= 0.70.
+
+Earlier context precision baselines showed low precision when evaluating broad top-k retrieval context. After context assembly optimization and knowledge base enhancements, the context precision evaluation needed to be rerun and aligned with the updated knowledge base.
+
+### Evidence
+
+Initial baseline showed:
+
+- avg_context_precision_at_k = 0.46
+
+Top-N simulation showed:
+
+- Top 5 precision = 0.46
+- Top 3 precision = 0.60
+- Top 2 precision = 0.65
+
+After Phase 3 knowledge base updates, context precision evaluation was rerun on the answer evaluation set.
+
+Initial rerun showed PRD pass but local failures caused by outdated expected sources and keyword mismatch.
+
+### Change
+
+Updated `eval/answer_eval_set.jsonl` to align with the updated knowledge base:
+
+- `敏感数据脱敏的格式是什么？`
+  - expected_source changed to `08_pii_redaction_spec_cn.txt`
+  - expected_keywords updated to include `ID_NUMBER`
+
+- `系统在什么情况下会返回拒答？`
+  - expected_source changed to `07_refusal_behavior_spec_cn.txt`
+  - expected_keywords updated to include `SAFETY_RULE_TRIGGERED`, `NO_RETRIEVED_CONTEXT`, and `LOW_RETRIEVAL_CONFIDENCE`
+
+- `What authentication method does the AKP Platform use in MVP?`
+  - expected_keywords changed from `SSO` to the document wording `single sign-on`
+
+### Validation Result
+
+After evaluation set alignment:
+
+- answerable_questions = 28
+- evaluated_questions = 28
+- avg_context_precision = 0.9836
+- avg_source_accuracy = 1.0
+- avg_keyword_coverage = 0.9673
+- passing_count = 28 / 28
+- passing_rate = 1.0
+- PRD target = 0.70
+- PRD status = PASS
+
+### Related Files
+
+- `eval/answer_eval_set.jsonl`
+- `scripts/evaluate_context_precision.py`
+- `reports/evaluations/2026-05-11_context_precision_eval.csv`
+
+### Final Conclusion
+
+Context Precision PRD validation is complete.
+
+The system now satisfies the PRD requirement:
+
+    Context Precision >= 0.70
+
+Final measured value:
+
+    Avg Context Precision = 0.9836

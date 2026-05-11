@@ -1,5 +1,6 @@
 import csv
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -16,8 +17,8 @@ from app.rag.safety import check_safety
 
 
 EVAL_SET_PATH = PROJECT_ROOT / "eval" / "answer_eval_set.jsonl"
-CSV_REPORT_PATH = PROJECT_ROOT / "reports" / "evaluations" / "2026-05-09_answer_quality_baseline.csv"
-MD_REPORT_PATH = PROJECT_ROOT / "reports" / "evaluations" / "2026-05-09_answer_quality_baseline.md"
+CSV_REPORT_PATH = PROJECT_ROOT / "reports" / "evaluations" / "2026-05-11_answer_compliance_eval.csv"
+MD_REPORT_PATH = PROJECT_ROOT / "reports" / "evaluations" / "2026-05-11_answer_compliance_eval.md"
 
 
 def load_eval_set(path: Path) -> List[Dict[str, Any]]:
@@ -36,8 +37,133 @@ def load_eval_set(path: Path) -> List[Dict[str, Any]]:
     return records
 
 
-def contains_keyword(text: str, keyword: str) -> bool:
-    return keyword.lower() in text.lower()
+def normalize_text(value: str) -> str:
+    """
+    Normalize text for rule-based keyword matching.
+
+    This helps cases such as:
+    - GET `/health` matching /health
+    - Markdown bold/code formatting
+    - repeated whitespace
+    """
+    if not value:
+        return ""
+
+    value = value.lower()
+
+    # Remove common Markdown formatting.
+    value = value.replace("`", "")
+    value = value.replace("*", "")
+    value = value.replace("_", " ")
+
+    # Normalize punctuation spacing lightly.
+    value = value.replace("：", ":")
+    value = value.replace("，", ",")
+    value = value.replace("。", ".")
+
+    # Normalize whitespace.
+    value = re.sub(r"\s+", " ", value)
+
+    return value.strip()
+
+
+def contains_expected_keyword(text: str, keyword: str) -> bool:
+    """
+    Check whether an expected keyword appears in the answer.
+
+    This is intentionally simple, but more robust than raw substring matching.
+    """
+    normalized_text = normalize_text(text)
+    normalized_keyword = normalize_text(keyword)
+
+    return normalized_keyword in normalized_text
+
+
+def is_negated_forbidden_keyword(answer: str, keyword: str) -> bool:
+    """
+    Detect simple negated contexts for forbidden keywords.
+
+    This prevents false failures such as:
+    - 不可以 matching forbidden keyword 可以
+    - 不得将其写入源代码 matching forbidden keyword 写入源代码
+    - must not write to source code matching forbidden phrase write to source code
+    """
+    normalized_answer = normalize_text(answer)
+    normalized_keyword = normalize_text(keyword)
+
+    if not normalized_keyword:
+        return False
+
+    start = 0
+
+    while True:
+        index = normalized_answer.find(normalized_keyword, start)
+        if index == -1:
+            break
+
+        prefix_window = normalized_answer[max(0, index - 12): index]
+        suffix_window = normalized_answer[index: index + len(normalized_keyword) + 12]
+
+        chinese_negation_markers = [
+            "不",
+            "不得",
+            "不能",
+            "不应",
+            "不应该",
+            "禁止",
+            "严禁",
+            "不可",
+            "不允许",
+            "避免",
+            "不得将其",
+            "不能将其",
+            "不应将其",
+            "不应该将其",
+        ]
+
+        if any(marker in prefix_window for marker in chinese_negation_markers):
+            return True
+
+        # Special case: forbidden keyword is "可以", but answer says "不可以".
+        if normalized_keyword == "可以" and "不可以" in suffix_window:
+            return True
+
+        english_negation_markers = [
+            "not",
+            "must not",
+            "should not",
+            "cannot",
+            "can't",
+            "do not",
+            "does not",
+            "never",
+            "forbidden",
+            "prohibited",
+            "not allowed",
+        ]
+
+        if any(marker in prefix_window for marker in english_negation_markers):
+            return True
+
+        start = index + len(normalized_keyword)
+
+    return False
+
+
+def contains_forbidden_keyword(answer: str, keyword: str) -> bool:
+    """
+    Return True only when a forbidden keyword appears in a non-negated context.
+    """
+    normalized_answer = normalize_text(answer)
+    normalized_keyword = normalize_text(keyword)
+
+    if normalized_keyword not in normalized_answer:
+        return False
+
+    if is_negated_forbidden_keyword(answer, keyword):
+        return False
+
+    return True
 
 
 def evaluate_keywords(answer: str, expected_keywords: List[str]) -> Dict[str, Any]:
@@ -53,7 +179,7 @@ def evaluate_keywords(answer: str, expected_keywords: List[str]) -> Dict[str, An
     missing = []
 
     for keyword in expected_keywords:
-        if contains_keyword(answer, keyword):
+        if contains_expected_keyword(answer, keyword):
             matched.append(keyword)
         else:
             missing.append(keyword)
@@ -72,7 +198,7 @@ def evaluate_forbidden_keywords(answer: str, forbidden_keywords: List[str]) -> D
     found = []
 
     for keyword in forbidden_keywords:
-        if contains_keyword(answer, keyword):
+        if contains_forbidden_keyword(answer, keyword):
             found.append(keyword)
 
     return {
@@ -235,6 +361,7 @@ def summarize_results(details: List[Dict[str, Any]]) -> Dict[str, Any]:
     if total == 0:
         return {
             "total_questions": 0,
+            "answer_compliance_rate": 0,
             "rule_based_pass_rate": 0,
             "answer_not_empty_rate": 0,
             "expected_refusal_match_rate": 0,
@@ -277,9 +404,12 @@ def summarize_results(details: List[Dict[str, Any]]) -> Dict[str, Any]:
         if isinstance(item.get("total_tokens"), (int, float))
     ]
 
+    rule_based_pass_rate = rate("rule_based_pass")
+
     return {
         "total_questions": total,
-        "rule_based_pass_rate": rate("rule_based_pass"),
+        "answer_compliance_rate": rule_based_pass_rate,
+        "rule_based_pass_rate": rule_based_pass_rate,
         "answer_not_empty_rate": rate("answer_not_empty"),
         "expected_refusal_match_rate": rate("expected_refusal_match"),
         "refusal_reason_match_rate": rate("refusal_reason_match"),
@@ -338,6 +468,7 @@ def write_csv_report(details: List[Dict[str, Any]], summary: Dict[str, Any], pat
         "total_latency_ms",
         "answer_preview",
         "total_questions",
+        "answer_compliance_rate",
         "rule_based_pass_rate",
         "answer_not_empty_rate",
         "expected_refusal_match_rate",
@@ -359,6 +490,7 @@ def write_csv_report(details: List[Dict[str, Any]], summary: Dict[str, Any], pat
             {
                 "row_type": "summary",
                 "total_questions": summary["total_questions"],
+                "answer_compliance_rate": summary["answer_compliance_rate"],
                 "rule_based_pass_rate": summary["rule_based_pass_rate"],
                 "answer_not_empty_rate": summary["answer_not_empty_rate"],
                 "expected_refusal_match_rate": summary["expected_refusal_match_rate"],
@@ -383,25 +515,27 @@ def write_csv_report(details: List[Dict[str, Any]], summary: Dict[str, Any], pat
 def write_markdown_report(summary: Dict[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
-    content = f"""# Answer Quality Evaluation Report: Baseline
+    content = f"""# Answer Compliance Evaluation Report
 
-Date: 2026-05-09  
+Date: 2026-05-11  
 Project: AIA RAG Case Study Service  
-Evaluation Type: Answer Quality Evaluation  
+Evaluation Type: Answer Compliance Evaluation  
 Version: v1  
-Supporting CSV: reports/evaluations/2026-05-09_answer_quality_baseline.csv
+Supporting CSV: reports/evaluations/2026-05-11_answer_compliance_eval.csv
 
 ---
 
 ## 1. Objective
 
-This evaluation validates the first LLM-based answer generation pipeline.
+This evaluation validates whether the generated answers comply with the expected answer behavior defined in the evaluation set.
 
 The goal is to verify that the system can:
 
 - Generate non-empty answers
 - Respect expected refusal behavior
+- Return the expected refusal reason when applicable
 - Return sources for answerable questions
+- Retrieve the expected source
 - Include expected answer keywords
 - Avoid forbidden answer keywords
 - Record token usage and latency
@@ -432,9 +566,22 @@ Total questions:
 
 ## 3. Metrics
 
-Metrics used in this baseline evaluation:
+Main PRD metric:
 
-- rule_based_pass_rate
+    answer_compliance_rate = rule_based_pass_rate
+
+A record passes when all of the following checks pass:
+
+- answer_not_empty
+- expected_refusal_match
+- refusal_reason_match
+- has_sources
+- source_hit
+- expected_keywords_hit_rate >= 0.5
+- forbidden_keywords_clean
+
+Supporting metrics:
+
 - answer_not_empty_rate
 - expected_refusal_match_rate
 - refusal_reason_match_rate
@@ -445,7 +592,7 @@ Metrics used in this baseline evaluation:
 - avg_generation_latency_ms
 - avg_total_tokens
 
-This is a rule-based baseline evaluation, not an LLM-as-judge evaluation.
+This is a rule-based compliance evaluation, not an LLM-as-judge evaluation.
 
 ---
 
@@ -454,6 +601,7 @@ This is a rule-based baseline evaluation, not an LLM-as-judge evaluation.
 | Metric | Value |
 |---|---:|
 | Total Questions | {summary["total_questions"]} |
+| Answer Compliance Rate | {summary["answer_compliance_rate"]} |
 | Rule-based Pass Rate | {summary["rule_based_pass_rate"]} |
 | Answer Not Empty Rate | {summary["answer_not_empty_rate"]} |
 | Expected Refusal Match Rate | {summary["expected_refusal_match_rate"]} |
@@ -467,45 +615,55 @@ This is a rule-based baseline evaluation, not an LLM-as-judge evaluation.
 
 ---
 
-## 5. Interpretation
+## 5. PRD Status
 
-This report establishes the first answer-level evaluation baseline after replacing the extractive generator with an LLM-based generator.
+PRD target:
 
-The current evaluation is intentionally simple and reproducible.
+    Answer Compliance >= 0.80
 
-It checks rule-based properties such as:
+Advanced target:
 
-- Whether the answer exists
-- Whether refusal behavior matches expectation
-- Whether expected sources are present
-- Whether expected keywords appear
-- Whether forbidden keywords are avoided
+    Answer Compliance >= 0.90
+
+Current result:
+
+    Answer Compliance Rate = {summary["answer_compliance_rate"]}
+
+Status:
+
+    {"PASS" if summary["answer_compliance_rate"] >= 0.8 else "FAIL"}
 
 ---
 
-## 6. Limitations
+## 6. Interpretation
+
+This report formalizes the answer-level rule-based evaluation as Answer Compliance Evaluation.
+
+It checks whether the final answer follows expected behavior, including refusal correctness, source coverage, expected keyword coverage, and forbidden keyword avoidance.
+
+---
+
+## 7. Limitations
 
 Current limitations:
 
 1. This is not a semantic faithfulness evaluation.
-2. This does not yet measure context precision.
-3. This does not use LLM-as-judge.
-4. Keyword matching may be too strict or too loose.
-5. Some correct answers may fail if they use different wording.
-6. Some incorrect answers may pass if they contain expected keywords.
+2. This does not replace LLM-as-Judge faithfulness evaluation.
+3. Keyword matching may still miss some paraphrases.
+4. Some correct answers may fail if they use different wording.
+5. Some incorrect answers may pass if they contain expected keywords.
+6. Forbidden keyword matching only supports simple negation handling.
 
 ---
 
-## 7. Next Steps
+## 8. Next Steps
 
 Recommended next steps:
 
-1. Review failed cases in the CSV.
-2. Improve prompts or context assembly if needed.
-3. Add faithfulness evaluation.
-4. Add context precision evaluation.
-5. Add refusal appropriateness evaluation set.
-6. Add LLM-as-judge evaluation when stable.
+1. Review any failed cases in the CSV.
+2. Expand the evaluation set if needed.
+3. Add style consistency evaluation.
+4. Integrate answer_compliance_rate into the operations report.
 """
 
     with open(path, "w", encoding="utf-8") as file:
@@ -547,7 +705,7 @@ def main():
     write_markdown_report(summary, MD_REPORT_PATH)
 
     print()
-    print("Answer evaluation completed.")
+    print("Answer compliance evaluation completed.")
     print(f"CSV report: {CSV_REPORT_PATH}")
     print(f"Markdown report: {MD_REPORT_PATH}")
     print()
