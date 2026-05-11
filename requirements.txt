@@ -14,8 +14,4 @@ tiktoken
 sentence-transformers
 langchain-huggingface
 rank-bm25
-pymupdf
-
-pillow
-
-pytesseract
+reportlab
