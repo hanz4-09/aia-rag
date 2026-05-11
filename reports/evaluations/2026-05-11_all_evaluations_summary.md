@@ -9,8 +9,8 @@ Mode: `all`
 ## 1. Summary
 
 - Total tasks: 8
-- Successful tasks: 8
-- Failed or missing tasks: 0
+- Successful tasks: 0
+- Failed or missing tasks: 8
 
 ---
 
@@ -18,14 +18,14 @@ Mode: `all`
 
 | Task | Status | Duration sec | Report | Key Metrics |
 |---|---:|---:|---|---|
-| operations_report | success | 0.09 | `reports\operations_report.csv` | total_requests=1; p50_latency_ms=3352; p95_latency_ms=3352; avg_latency_ms=3352; avg_total_tokens=1061; reference_cost_per_1000_calls=0.5188; estimated_billable_cost_per_1000_calls=0.0; answer_compliance_rate=1.0 |
-| answer_compliance | success | 120.07 | `reports\evaluations\2026-05-11_answer_compliance_eval.csv` | total_questions=30; answer_compliance_rate=1.0; rule_based_pass_rate=1.0; answer_not_empty_rate=1.0; expected_refusal_match_rate=1.0; refusal_reason_match_rate=1.0; source_hit_rate=1.0; forbidden_keywords_clean_rate=1.0; avg_expected_keywords_hit_rate=0.9694 |
-| refusal_appropriateness | success | 54.04 | `reports\evaluations\2026-05-09_refusal_appropriateness.csv` | total_questions=14; pass_rate=1.0; refusal_decision_match_rate=1.0; refusal_reason_match_rate=1.0; false_positive_rate=0.0; false_negative_rate=0.0 |
-| context_precision | success | 14.1 | `reports\evaluations\2026-05-11_context_precision_eval.csv` | avg_context_precision=0.9717; avg_source_accuracy=1.0; avg_keyword_coverage=0.9435; passing_count=27; passing_rate=0.9643; prd_target=0.7; prd_pass=True |
-| faithfulness_llm_judge | success | 173.77 | `reports\evaluations\2026-05-11_faithfulness_eval.csv` | avg_faithfulness=1.0; overall_statements=76; passing_count=28; prd_target=0.85; prd_pass=True |
-| style_consistency | success | 205.73 | `reports\evaluations\2026-05-11_style_consistency_eval.csv` | total_answerable=28; total_evaluated=28; avg_style_consistency=0.994; avg_language_consistency=1.0; avg_format_consistency=0.9821; avg_tone_professionalism=1.0; passing_count=27; passing_rate=0.9643; prd_target=0.85; prd_pass=True |
-| latency | success | 108.55 | `reports\evaluations\2026-05-11_latency_eval.csv` | total_requests=30; successful_requests=30; failed_requests=0; success_rate=1.0; within_10s_rate=0.9667; avg_latency_ms=3102; p50_latency_ms=2545.0; p90_latency_ms=5248.0; p95_latency_ms=7153.7; max_latency_ms=10591; prd_pass=True |
-| concurrency | success | 55.53 | `reports\evaluations\2026-05-11_concurrency_eval.csv` | total_requests=5; concurrency_level=5; successful_requests=5; failed_requests=0; success_rate=1.0; within_10s_rate=1.0; avg_latency_ms=3157.6; p95_latency_ms=5915.6; max_latency_ms=6373; wall_clock_latency_ms=6377; prd_pass=True |
+| operations_report | skipped | 0 | `reports\operations_report.csv` | total_requests=1; p50_latency_ms=3352; p95_latency_ms=3352; avg_latency_ms=3352; avg_total_tokens=1061; reference_cost_per_1000_calls=0.5188; estimated_billable_cost_per_1000_calls=0.0; answer_compliance_rate=1.0 |
+| answer_compliance | skipped | 0 | `reports\evaluations\2026-05-11_answer_compliance_eval.csv` | total_questions=30; answer_compliance_rate=1.0; rule_based_pass_rate=1.0; answer_not_empty_rate=1.0; expected_refusal_match_rate=1.0; refusal_reason_match_rate=1.0; source_hit_rate=1.0; forbidden_keywords_clean_rate=1.0; avg_expected_keywords_hit_rate=0.9417 |
+| refusal_appropriateness | skipped | 0 | `reports\evaluations\2026-05-09_refusal_appropriateness.csv` | total_questions=14; pass_rate=1.0; refusal_decision_match_rate=1.0; refusal_reason_match_rate=1.0; false_positive_rate=0.0; false_negative_rate=0.0 |
+| context_precision | skipped | 0 | `reports\evaluations\2026-05-11_context_precision_eval.csv` | avg_context_precision=0.9807; avg_source_accuracy=1.0; avg_keyword_coverage=0.9613; passing_count=28; passing_rate=1.0; prd_target=0.7; prd_pass=True |
+| faithfulness_llm_judge | skipped | 0 | `reports\evaluations\2026-05-11_faithfulness_eval.csv` | avg_faithfulness=1.0; overall_statements=76; passing_count=28; prd_target=0.85; prd_pass=True |
+| style_consistency | skipped | 0 | `reports\evaluations\2026-05-11_style_consistency_eval.csv` | total_answerable=28; total_evaluated=28; avg_style_consistency=0.994; avg_language_consistency=1.0; avg_format_consistency=0.9821; avg_tone_professionalism=1.0; passing_count=27; passing_rate=0.9643; prd_target=0.85; prd_pass=True |
+| latency | skipped | 0 | `reports\evaluations\2026-05-11_latency_eval.csv` | total_requests=30; successful_requests=30; failed_requests=0; success_rate=1.0; within_10s_rate=0.9667; avg_latency_ms=3102; p50_latency_ms=2545.0; p90_latency_ms=5248.0; p95_latency_ms=7153.7; max_latency_ms=10591; prd_pass=True |
+| concurrency | skipped | 0 | `reports\evaluations\2026-05-11_concurrency_eval.csv` | total_requests=5; concurrency_level=5; successful_requests=5; failed_requests=0; success_rate=1.0; within_10s_rate=1.0; avg_latency_ms=3157.6; p95_latency_ms=5915.6; max_latency_ms=6373; wall_clock_latency_ms=6377; prd_pass=True |
 
 ---
 

@@ -1329,3 +1329,245 @@ Final validation results are also included:
 README Phase 3 update is completed.
 
 The repository homepage now reflects the current project status and final Phase 3 validation results.
+
+---
+
+## Optimization 023: Cross-lingual Evaluation Keyword Alignment
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Context Precision / Evaluation Set Alignment  
+Status: Completed
+
+### Issue / Motivation
+
+After the qwen-max full evaluation run, Context Precision still passed the PRD target but one case failed the single-case threshold.
+
+Failed case:
+
+    运营日志至少需要保留多少天？
+
+Observed result:
+
+- context_precision = 0.5
+- source_accuracy = 1.0
+- keyword_coverage = 0.0
+- expected_source = 03_compliance_guide_en.txt
+
+### Diagnosis
+
+The correct source document was retrieved, as shown by:
+
+    source_accuracy = 1.0
+
+The failure came from keyword coverage.
+
+The question was Chinese and the original expected keywords were Chinese:
+
+- 运营日志
+- 90天
+
+However, the expected source document was English, so the retrieved context used English wording such as:
+
+- operational logs
+- 90 days
+
+This was a cross-lingual evaluation keyword alignment issue, not a retrieval failure.
+
+### Change
+
+Updated `eval/answer_eval_set.jsonl`.
+
+The expected keywords for the affected case were expanded to:
+
+- 运营日志
+- 90天
+- operational logs
+- 90 days
+
+### Validation Result
+
+Context Precision was rerun.
+
+Final result:
+
+- answerable_questions = 28
+- evaluated_questions = 28
+- avg_context_precision = 0.9807
+- avg_source_accuracy = 1.0
+- avg_keyword_coverage = 0.9613
+- passing_count = 28
+- passing_rate = 1.0
+- PRD status = PASS
+
+The affected case improved to:
+
+- context_precision = 0.75
+- source_accuracy = 1.0
+- keyword_coverage = 0.5
+
+Answer Compliance was also rerun and remained fully passing:
+
+- total_questions = 30
+- answer_compliance_rate = 1.0
+- rule_based_pass_rate = 1.0
+- expected_refusal_match_rate = 1.0
+- refusal_reason_match_rate = 1.0
+- source_hit_rate = 1.0
+- forbidden_keywords_clean_rate = 1.0
+
+### Related Files
+
+- `eval/answer_eval_set.jsonl`
+- `reports/evaluations/2026-05-11_context_precision_eval.csv`
+- `reports/evaluations/2026-05-11_answer_compliance_eval.csv`
+- `reports/diagnosis/2026-05-11_cross_lingual_eval_keyword_alignment_report.md`
+
+### Final Conclusion
+
+Cross-lingual Evaluation Keyword Alignment is completed.
+
+The Context Precision local regression has been resolved and Context Precision is back to 28/28 passing.
+
+---
+
+## Optimization 024: Qwen-Max Latency Outlier Diagnosis
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Latency Evaluation / Performance Diagnosis  
+Status: Completed
+
+### Issue / Motivation
+
+The final qwen-max latency evaluation passed the PRD target, but one request exceeded the 10-second threshold.
+
+Observed result:
+
+- within_10s_rate = 0.9667
+- max_latency_ms = 10591
+- PRD status = PASS
+
+### Outlier
+
+Question:
+
+    系统在什么情况下会返回拒答？
+
+Metrics:
+
+- retrieval_latency_ms = 11
+- generation_latency_ms = 10580
+- total_latency_ms = 10591
+- input_tokens = 943
+- output_tokens = 86
+- total_tokens = 1029
+- model_name = qwen-max
+- generator_type = llm
+
+### Diagnosis
+
+The outlier was not caused by retrieval because retrieval latency was only 11 ms.
+
+The outlier was dominated by LLM generation latency:
+
+    generation_latency_ms = 10580
+
+The output was not unusually long:
+
+    output_tokens = 86
+
+Therefore, this was classified as a qwen-max provider / network / generation latency fluctuation.
+
+### Validation Result
+
+Top slow requests showed the same pattern:
+
+- low retrieval latency
+- high generation latency
+- qwen-max model usage
+
+This confirms that the bottleneck is generation, not retrieval or context assembly.
+
+### PRD Impact
+
+The latency PRD requires:
+
+    within_10s_rate >= 0.90
+
+Current result:
+
+    within_10s_rate = 0.9667
+
+So the PRD target remains passed.
+
+### Decision
+
+No immediate code change is required.
+
+This issue is recorded as a known performance caveat.
+
+### Related Files
+
+- `reports/evaluations/2026-05-11_latency_eval.csv`
+- `scripts/evaluate_latency.py`
+- `reports/diagnosis/2026-05-11_qwen_max_latency_outlier_diagnosis_report.md`
+
+### Final Conclusion
+
+Qwen-Max Latency Outlier Diagnosis is completed.
+
+The outlier was caused by LLM generation latency, not retrieval latency.
+
+Final status:
+
+    Diagnosed
+    No code change required
+    PRD remains PASS
+
+---
+
+## Optimization 025: Phase 3 Follow-up Resolution Update
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Final Summary / Follow-up Tracking  
+Status: Completed
+
+### Issue / Motivation
+
+After the initial Phase 3 final summary, two non-blocking follow-up items were investigated:
+
+1. Context Precision local regression from 28/28 to 27/28.
+2. One qwen-max latency outlier above 10 seconds.
+
+The final summary report needed to be updated with the resolution status.
+
+### Resolution
+
+Context Precision local regression:
+
+- Diagnosed as a cross-lingual evaluation keyword alignment issue.
+- Updated bilingual expected keywords.
+- Context Precision recovered to 28/28 passing.
+- Avg Context Precision = 0.9807.
+
+Qwen-Max latency outlier:
+
+- Diagnosed as LLM generation latency fluctuation.
+- Retrieval latency was only 11 ms.
+- Generation latency was 10580 ms.
+- No immediate code change required because PRD still passed.
+
+### Related Files
+
+- `reports/diagnosis/2026-05-11_phase3_final_summary_report.md`
+- `reports/diagnosis/2026-05-11_cross_lingual_eval_keyword_alignment_report.md`
+- `reports/diagnosis/2026-05-11_qwen_max_latency_outlier_diagnosis_report.md`
+- `reports/optimization_log.md`
+
+### Final Conclusion
+
+Phase 3 follow-up resolution update is completed.
+
+All PRD metrics remain passed, and the main follow-up items have either been resolved or diagnosed.

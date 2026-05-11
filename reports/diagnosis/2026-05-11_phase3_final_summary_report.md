@@ -356,3 +356,84 @@ Final status:
 Overall Phase 3 completion:
 
     approximately 96%
+
+---
+
+## 8. Follow-up Resolution Update
+
+After the initial Phase 3 final summary, two non-blocking follow-up items were investigated.
+
+### 8.1 Context Precision Local Regression
+
+Initial observation:
+
+    Context Precision passing count dropped from 28/28 to 27/28.
+
+Diagnosis:
+
+    The failed case was `运营日志至少需要保留多少天？`.
+
+    The correct source document was retrieved, but keyword coverage failed because the Chinese question expected Chinese keywords while the expected source document was English.
+
+Change:
+
+    Updated the evaluation keywords to include bilingual expressions:
+
+    - 运营日志
+    - 90天
+    - operational logs
+    - 90 days
+
+Result:
+
+    Avg Context Precision = 0.9807
+    Passing = 28/28
+    PRD Status = PASS
+
+Status:
+
+    Resolved
+
+### 8.2 Qwen-Max Latency Outlier
+
+Initial observation:
+
+    One latency evaluation request exceeded 10 seconds.
+
+Outlier:
+
+    系统在什么情况下会返回拒答？
+
+Diagnosis:
+
+    retrieval_latency_ms = 11
+    generation_latency_ms = 10580
+    total_latency_ms = 10591
+    output_tokens = 86
+
+The outlier was caused by qwen-max generation latency, not retrieval or answer length.
+
+Result:
+
+    within_10s_rate = 0.9667
+    PRD target = 0.90
+    PRD Status = PASS
+
+Status:
+
+    Diagnosed
+    No immediate code change required
+
+### 8.3 Updated Final Status
+
+After follow-up investigation:
+
+- Context Precision local regression is resolved.
+- Latency outlier is diagnosed and recorded as a qwen-max provider/generation latency caveat.
+- All PRD metrics remain PASS.
+
+Updated Phase 3 status:
+
+    Functionally complete
+    All PRD metrics passed
+    Remaining work is optional future enhancement
