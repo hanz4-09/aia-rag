@@ -2407,3 +2407,74 @@ One-click summary now includes:
 Operations Report Runtime Sample Enhancement is completed.
 
 The operations report now uses a more representative runtime sample and better supports the PRD observability requirement.
+
+---
+
+## Optimization 037: PII Redaction Evaluation Formalization
+
+Date: 2026-05-11  
+Phase: Phase 3  
+Area: Privacy / PII Redaction Evaluation  
+Status: Completed
+
+### Issue / Motivation
+
+The PRD requires basic PII handling.
+
+The project already implemented PII redaction and documented the redaction rules in the log field dictionary. However, PII redaction did not yet have a dedicated formal evaluation script.
+
+### Change
+
+Added:
+
+- `scripts/evaluate_pii_redaction.py`
+
+The script validates:
+
+- email redaction
+- phone redaction
+- API key redaction
+- access token redaction
+- secret redaction
+- ID number redaction
+- mixed PII redaction
+
+The evaluation checks that:
+
+- raw sensitive values do not remain after redaction
+- expected placeholders appear after redaction
+
+The PII evaluation was also added to:
+
+- `scripts/run_all_evaluations.py`
+
+as a core evaluation task named:
+
+    pii_redaction
+
+### Validation Result
+
+Final PII redaction evaluation result:
+
+- total_cases = 7
+- passing_count = 7
+- pass_rate = 1.0
+- forbidden_clean_rate = 1.0
+- placeholder_present_rate = 1.0
+- PRD status = PASS
+
+### Related Files
+
+- `app/rag/pii.py`
+- `scripts/evaluate_pii_redaction.py`
+- `scripts/run_all_evaluations.py`
+- `reports/evaluations/2026-05-11_pii_redaction_eval.csv`
+- `reports/evaluations/2026-05-11_pii_redaction_eval.md`
+- `reports/diagnosis/2026-05-11_pii_redaction_evaluation_report.md`
+- `reports/observability/log_field_dictionary.md`
+
+### Final Conclusion
+
+PII Redaction Evaluation Formalization is completed.
+
+The project now has reproducible evaluation evidence for the PRD privacy requirement.

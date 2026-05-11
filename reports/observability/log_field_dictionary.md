@@ -239,3 +239,67 @@ Potential future improvements:
 - Add error_code.
 - Add evaluation_run_id.
 - Add HTTP-level request metadata for deployed FastAPI service.
+
+---
+
+## 11. Advanced Memory Log Fields
+
+These fields support Advanced Memory v1 observability.
+
+- retrieval_query: actual query used for retrieval after optional memory-aware rewriting. For normal single-turn requests, this is usually the same as the redacted user query. For follow-up questions, this may include the previous question and the current follow-up question.
+- memory_turns_used: number of previous conversation turns loaded for the current session.
+- memory_rewrite_applied: whether the retrieval query was rewritten using conversation history.
+- memory_rewrite_strategy: strategy used for memory-aware query construction, such as no_history, not_follow_up, disabled, or previous_question_plus_current_follow_up.
+
+These fields are mainly used for multi-turn diagnosis and Advanced Memory evaluation. They are not currently aggregated in the minimal operations report.
+
+---
+
+## 12. Sample Advanced Memory Log
+
+Example advanced memory follow-up log:
+
+    {
+      "request_id": "sample-advanced-memory-001",
+      "session_id": "advanced-memory-demo-001",
+      "query": "How long should they be retained?",
+      "retrieval_query": "Previous question: What are the audit logging requirements?\nCurrent follow-up question: How long should they be retained?",
+      "memory_turns_used": 1,
+      "memory_rewrite_applied": true,
+      "memory_rewrite_strategy": "previous_question_plus_current_follow_up",
+      "retrieval_mode": "hybrid",
+      "reranker_enabled": true,
+      "top_k": 5,
+      "retrieved_chunk_ids": [
+        "03_compliance_guide_en.txt_chunk_3",
+        "05_akp_technical_specification_en.txt_chunk_1",
+        "03_compliance_guide_en.txt_chunk_2"
+      ],
+      "retrieved_sources": [
+        "03_compliance_guide_en.txt",
+        "05_akp_technical_specification_en.txt",
+        "03_compliance_guide_en.txt"
+      ],
+      "retrieval_distances": [8.65, null, 15.67],
+      "retrieval_sources": ["hybrid", "keyword", "vector"],
+      "keyword_scores": [0.3333, 1.0, 0.0],
+      "hybrid_scores": [0.7333, 0.4, 0.2],
+      "vector_ranks": [1, null, 3],
+      "keyword_ranks": [3, 1, null],
+      "reranker_scores": [0.68, 0.48, 0.1733],
+      "rerank_latency_ms": 0,
+      "retrieval_latency_ms": 14,
+      "generation_latency_ms": 2325,
+      "total_latency_ms": 2340,
+      "input_tokens": 651,
+      "output_tokens": 42,
+      "total_tokens": 693,
+      "model_name": "qwen-max",
+      "generator_type": "llm",
+      "context_chunks_used": 3,
+      "cache_hit": false,
+      "refused": false,
+      "refusal_reason": null,
+      "timestamp": "2026-05-11T00:00:00+00:00"
+    }
+

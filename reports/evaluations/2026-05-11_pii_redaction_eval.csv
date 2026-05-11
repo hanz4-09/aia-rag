@@ -1,0 +1,9 @@
+row_type,case_id,input_text,redacted_text,forbidden_values,expected_placeholders,leaked_values,missing_placeholders,forbidden_clean,placeholders_present,pass,total_cases,passing_count,pass_rate,forbidden_clean_count,forbidden_clean_rate,placeholder_present_count,placeholder_present_rate,prd_pass
+summary,,,,,,,,,,,7,7,1.0,7,1.0,7,1.0,True
+detail,email_redaction,My email is ziwei@example.com.,My email is [EMAIL],ziwei@example.com,[EMAIL],,,True,True,True,,,,,,,,
+detail,phone_redaction,My phone number is 13812345678.,My phone number is [PHONE].,13812345678,[PHONE],,,True,True,True,,,,,,,,
+detail,api_key_redaction,The api_key=abc123secret should not be logged.,The api_key=[REDACTED_SECRET] should not be logged.,abc123secret,[REDACTED_SECRET],,,True,True,True,,,,,,,,
+detail,token_redaction,access_token=tok_live_123456789 must be hidden.,access_token=[REDACTED_SECRET] must be hidden.,tok_live_123456789,[REDACTED_SECRET],,,True,True,True,,,,,,,,
+detail,secret_redaction,secret=my_private_secret_value should be redacted.,secret=[REDACTED_SECRET] should be redacted.,my_private_secret_value,[REDACTED_SECRET],,,True,True,True,,,,,,,,
+detail,id_number_redaction,My ID number is 310101199001011234.,My ID number is [ID_NUMBER].,310101199001011234,[ID_NUMBER],,,True,True,True,,,,,,,,
+detail,mixed_pii_redaction,Contact me at test.user@example.com or 13800138000. api_key=test_secret_123 should not appear.,Contact me at [EMAIL] or [PHONE]. api_key=[REDACTED_SECRET] should not appear.,test.user@example.com|13800138000|test_secret_123,[EMAIL]|[PHONE]|[REDACTED_SECRET],,,True,True,True,,,,,,,,

@@ -8,9 +8,9 @@ Mode: `all`
 
 ## 1. Summary
 
-- Total tasks: 12
+- Total tasks: 13
 - Successful tasks: 0
-- Failed or missing tasks: 12
+- Failed or missing tasks: 13
 
 ---
 
@@ -24,6 +24,7 @@ Mode: `all`
 | context_precision | skipped | 0 | `reports\evaluations\2026-05-11_context_precision_eval.csv` | avg_context_precision=0.9807; avg_source_accuracy=1.0; avg_keyword_coverage=0.9613; passing_count=28; passing_rate=1.0; prd_target=0.7; prd_pass=True |
 | faithfulness_llm_judge | skipped | 0 | `reports\evaluations\2026-05-11_faithfulness_eval.csv` | avg_faithfulness=1.0; overall_statements=76; passing_count=28; prd_target=0.85; prd_pass=True |
 | style_consistency | skipped | 0 | `reports\evaluations\2026-05-11_style_consistency_eval.csv` | total_answerable=28; total_evaluated=28; avg_style_consistency=0.994; avg_language_consistency=1.0; avg_format_consistency=0.9821; avg_tone_professionalism=1.0; passing_count=27; passing_rate=0.9643; prd_target=0.85; prd_pass=True |
+| pii_redaction | skipped | 0 | `reports\evaluations\2026-05-11_pii_redaction_eval.csv` | total_cases=7; passing_count=7; pass_rate=1.0; forbidden_clean_rate=1.0; placeholder_present_rate=1.0; prd_pass=True |
 | multiturn_qa | skipped | 0 | `reports\evaluations\2026-05-11_multiturn_eval.csv` | total_cases=3; passing_count=3; pass_rate=1.0; history_used_rate=1.0; source_hit_rate=1.0; avg_keyword_hit_rate=1.0; prd_pass=True |
 | cache | skipped | 0 | `reports\evaluations\2026-05-11_cache_eval.csv` | total_cases=2; passing_count=2; pass_rate=1.0; first_cache_miss_rate=1.0; second_cache_hit_rate=1.0; latency_improved_rate=1.0; avg_keyword_hit_rate=1.0; prd_pass=True |
 | pdf_ingestion | skipped | 0 | `reports\evaluations\2026-05-11_pdf_ingestion_eval.csv` | total_cases=2; passing_count=2; pass_rate=1.0; pdf_files_checked=2; scanned_pdf_candidates=1; pdfs_with_ocr_performed=1; pdfs_with_ocr_succeeded=1; retrieval_hit_rate=1.0; loaded_documents=10; skipped_empty_documents=0; prd_pass=True |

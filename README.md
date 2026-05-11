@@ -378,7 +378,7 @@ Potential next steps:
 
 Current phase: Phase 3 completed  
 Final validation model: qwen-max  
-One-click evaluation tasks: 12
+One-click evaluation tasks: 13
 
 ### Completed Capabilities
 
@@ -387,6 +387,7 @@ One-click evaluation tasks: 12
 - Safety refusal handling
 - Low-confidence and no-context refusal handling
 - Basic PII redaction for answers and logs
+- Formal PII redaction evaluation
 - Structured JSONL logging
 - Operations report generation
 - Rule-based answer compliance evaluation
@@ -417,6 +418,7 @@ One-click evaluation tasks: 12
 | Multi-turn QA Pass Rate | 1.0 |
 | Advanced Memory Pass Rate | 1.0 |
 | Cache Evaluation Pass Rate | 1.0 |
+| Formal PII Redaction Pass Rate | 1.0 |
 | PDF/OCR Ingestion Pass Rate | 1.0 |
 | OCR Retrieval Hit Rate | 1.0 |
 | Latency Within 10s Rate | 0.9667 |

@@ -120,6 +120,21 @@ TASKS = [
         ],
     },
     {
+        "name": "pii_redaction",
+        "script": "scripts/evaluate_pii_redaction.py",
+        "mode": "core",
+        "report_glob": "*pii_redaction_eval.csv",
+        "description": "Evaluate basic PII redaction for logs and outputs.",
+        "key_metrics": [
+            "total_cases",
+            "passing_count",
+            "pass_rate",
+            "forbidden_clean_rate",
+            "placeholder_present_rate",
+            "prd_pass",
+        ],
+    },
+    {
         "name": "multiturn_qa",
         "script": "scripts/evaluate_multiturn.py",
         "mode": "core",
