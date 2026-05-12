@@ -1,0 +1,4 @@
+row_type,case_id,stage,status_code,refused,refusal_reason,answer_preview,log_error_stage,log_error_type,log_error_message,log_error_handled,log_trace_schema_version,pass,total_cases,passing_count,pass_rate,handled_error_rate,prd_pass
+summary,,,,,,,,,,,,,2,2,1.0,1.0,True
+detail,retrieval_failure_returns_system_error,retrieval,200,True,SYSTEM_ERROR,I cannot complete the request because the retrieval stage failed. Please try again later or contact the system owner if the issue persists.,retrieval,RuntimeError,simulated retrieval failure,True,otel-lite-v1,True,,,,,
+detail,generation_failure_returns_system_error,generation,200,True,SYSTEM_ERROR,I cannot complete the request because the generation stage failed. Please try again later or contact the system owner if the issue persists.,generation,RuntimeError,simulated generation failure,True,otel-lite-v1,True,,,,,

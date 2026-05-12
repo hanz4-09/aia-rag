@@ -20,8 +20,13 @@ class VectorRetriever:
         self.top_k = retrieval_config.get("top_k", 5)
         self.max_distance = retrieval_config.get("max_distance", None)
 
+        embedding_config = config.get("embedding", {})
+
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+            model_name=embedding_config.get(
+                "model",
+                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+            )
         )
 
         self.client = PersistentClient(path=str(self.persist_directory))

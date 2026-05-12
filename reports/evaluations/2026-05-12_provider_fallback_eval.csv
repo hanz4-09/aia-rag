@@ -1,0 +1,4 @@
+row_type,case_id,status_code,refused,fallback_applied,fallback_reason,primary_generator_type,fallback_generator_type,final_generator_type,log_fallback_applied,log_fallback_reason,pass,total_cases,passing_count,pass_rate,prd_pass
+summary,,,,,,,,,,,,2,2,1.0,True
+detail,fallback_generator_is_configured,,,,,,,,,,True,,,,
+detail,primary_llm_failure_falls_back_to_extractive,200,False,True,primary_generation_error,llm,extractive,extractive,True,primary_generation_error,True,,,,

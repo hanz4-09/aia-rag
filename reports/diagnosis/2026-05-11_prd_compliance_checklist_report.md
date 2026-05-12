@@ -268,3 +268,74 @@ Final PRD compliance status:
 The project satisfies the main PRD functional, quantitative, observability, security, and deliverable requirements.
 
 Remaining items are future production hardening tasks.
+
+---
+
+## 12. Final Closeout Update - 2026-05-12
+
+This section records the final closeout status after the 2026-05-12 P1/P2 hardening and evaluation expansion work.
+
+### 12.1 Updated Core PRD Evidence
+
+| Area | Latest Evidence | Result |
+|---|---|---|
+| Embedding model | `configs/app.yaml` now uses `BAAI/bge-m3` | Completed |
+| Context precision | `reports/evaluations/2026-05-12_context_precision_eval.csv` | PASS |
+| Multi-turn QA | `reports/evaluations/2026-05-12_multiturn_eval.csv` | PASS |
+| Advanced memory | `reports/evaluations/2026-05-12_advanced_memory_eval.csv` | PASS |
+| PDF/OCR ingestion | `reports/evaluations/2026-05-12_pdf_ingestion_eval.csv` | PASS |
+| PII redaction | `reports/evaluations/2026-05-12_pii_redaction_eval.csv` | PASS |
+| Corpus growth regression | `reports/evaluations/2026-05-12_corpus_regression_eval.csv` | PASS |
+| Prompt injection benchmark | `reports/evaluations/2026-05-12_prompt_injection_eval.csv` | PASS |
+| Error handling | `reports/evaluations/2026-05-12_error_handling_eval.csv` | PASS |
+| Provider fallback | `reports/evaluations/2026-05-12_provider_fallback_eval.csv` | PASS |
+| Secrets scanning before ingestion | `reports/evaluations/2026-05-12_secrets_scan_eval.csv` | PASS |
+| Session memory TTL/cleanup | `reports/evaluations/2026-05-12_session_memory_cleanup_eval.csv` | PASS |
+| Trace fields observability | `reports/evaluations/2026-05-12_trace_fields_eval.csv` | PASS |
+
+### 12.2 Final Core Evaluation Summary
+
+The final core one-click evaluation summary was regenerated with:
+
+    python scripts/run_all_evaluations.py --mode all --skip-run
+
+Final summary files:
+
+    reports/evaluations/2026-05-12_all_evaluations_summary.csv
+    reports/evaluations/2026-05-12_all_evaluations_summary.md
+
+Final summary status:
+
+    total_tasks = 13
+    skipped_tasks = 13
+    tasks_with_available_reports = 13
+    failed_or_missing_tasks = 0
+
+The skipped status is expected because the command reused existing reports instead of rerunning expensive evaluations.
+
+### 12.3 Additional Production-hardening Evidence
+
+The following enhancements were completed after the original Phase 3 summary:
+
+| Enhancement | Report |
+|---|---|
+| Embedding model switch to BAAI/bge-m3 | `reports/diagnosis/2026-05-12_embedding_model_switch_bge_m3_report.md` |
+| Multi-turn evaluation expansion | `reports/diagnosis/2026-05-12_multiturn_evaluation_expansion_report.md` |
+| OCR evaluation expansion | `reports/diagnosis/2026-05-12_ocr_evaluation_expansion_report.md` |
+| Corpus growth regression evaluation | `reports/diagnosis/2026-05-12_corpus_growth_regression_evaluation_report.md` |
+| OpenTelemetry-style trace fields | `reports/diagnosis/2026-05-12_trace_fields_observability_report.md` |
+| Session memory TTL and cleanup | `reports/diagnosis/2026-05-12_session_memory_ttl_cleanup_report.md` |
+| Error / timeout handling framework | `reports/diagnosis/2026-05-12_error_timeout_handling_framework_report.md` |
+| Secrets scanning before ingestion | `reports/diagnosis/2026-05-12_secrets_scanning_before_ingestion_report.md` |
+| Provider fallback model strategy | `reports/diagnosis/2026-05-12_provider_fallback_model_strategy_report.md` |
+| Prompt injection benchmark expansion | `reports/diagnosis/2026-05-12_prompt_injection_benchmark_expansion_report.md` |
+
+### 12.4 Final PRD Compliance Status
+
+Final PRD compliance status:
+
+    PASS
+
+The project satisfies the core PRD requirements for ingestion, retrieval, generation, multi-turn QA, OCR handling, safety, evaluation, logging, and operations reporting.
+
+Remaining items are production-scale future work, not core PRD blockers.

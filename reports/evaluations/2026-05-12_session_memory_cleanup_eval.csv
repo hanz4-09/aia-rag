@@ -1,0 +1,7 @@
+row_type,case_id,expected,actual,pass,total_cases,passing_count,pass_rate,ttl_cleanup_pass,max_sessions_pass,max_turns_pass,prd_pass
+summary,,,,,5,5,1.0,True,True,True,True
+detail,max_turns_retains_recent_turns,Only the latest 2 turns are retained.,"[{'question': 'q2', 'answer': 'a2'}, {'question': 'q3', 'answer': 'a3'}]",True,,,,,,,
+detail,ttl_cleanup_removes_expired_sessions,Expired session is removed and active session is retained.,removed_count=1; sessions=['active'],True,,,,,,,
+detail,cleanup_disabled_keeps_expired_sessions,Expired session is retained when cleanup is disabled.,removed_count=0; sessions=['expired'],True,,,,,,,
+detail,max_sessions_evicts_oldest_session,Only 2 newest sessions remain and oldest session is evicted.,"sessions=['s2', 's3']",True,,,,,,,
+detail,memory_state_export_import_compatible,Memory can export and import state with TTL metadata.,"[{'question': 'q1', 'answer': 'a1'}]",True,,,,,,,

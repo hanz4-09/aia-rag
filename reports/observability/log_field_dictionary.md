@@ -303,3 +303,30 @@ Example advanced memory follow-up log:
       "timestamp": "2026-05-11T00:00:00+00:00"
     }
 
+
+---
+
+## OpenTelemetry-style Trace Fields Update
+
+Date: 2026-05-12  
+Schema version: `otel-lite-v1`
+
+New runtime log fields:
+
+| Field | Description |
+|---|---|
+| `trace_id` | Lightweight trace identifier for the request. Currently equal to `request_id`. |
+| `span_id` | Root span identifier for the request. |
+| `parent_span_id` | Parent span identifier. Currently `null` because there is no upstream distributed trace context. |
+| `memory_span_id` | Stage-level span identifier for memory lookup and query rewrite. |
+| `retrieval_span_id` | Stage-level span identifier for retrieval. |
+| `rerank_span_id` | Stage-level span identifier for reranking. |
+| `generation_span_id` | Stage-level span identifier for answer generation. |
+| `trace_schema_version` | Trace field schema version. Current value: `otel-lite-v1`. |
+
+Notes:
+
+- This is a lightweight OpenTelemetry-style schema, not full OpenTelemetry SDK integration.
+- Trace fields are added only to new runtime logs generated after this enhancement.
+- Older logs do not contain these fields.
+- Future work may include OTLP export, Jaeger/Tempo integration, and distributed trace propagation.

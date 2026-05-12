@@ -44,7 +44,65 @@ EXPECTED_CASES = [
         "retrieval_query": "API Key incidents must be reported within 24 hours",
         "expected_retrieval_filename": "99_scanned_pdf_detection_test.pdf",
     },
+    {
+        "case_id": "ocr_api_key_reporting_window_content",
+        "filename": "99_scanned_pdf_detection_test.pdf",
+        "expected_status": "loaded_with_ocr",
+        "expected_scanned_pdf_candidate": True,
+        "expected_ocr_performed": True,
+        "expected_ocr_succeeded": True,
+        "min_pages_without_text": 1,
+        "min_extracted_chars": 20,
+        "retrieval_query": "Within how many hours must API Key incidents be reported?",
+        "expected_retrieval_filename": "99_scanned_pdf_detection_test.pdf",
+        "expected_retrieval_keywords": [
+            "API Key incidents",
+            "24 hours",
+        ],
+    },
+    {
+        "case_id": "ocr_audit_log_retention_content",
+        "filename": "99_scanned_pdf_detection_test.pdf",
+        "expected_status": "loaded_with_ocr",
+        "expected_scanned_pdf_candidate": True,
+        "expected_ocr_performed": True,
+        "expected_ocr_succeeded": True,
+        "min_pages_without_text": 1,
+        "min_extracted_chars": 20,
+        "retrieval_query": "What does the scanned PDF say about audit log retention?",
+        "expected_retrieval_filename": "99_scanned_pdf_detection_test.pdf",
+        "expected_retrieval_keywords": [
+            "Audit logs",
+            "retained",
+        ],
+    },
 ]
+
+
+
+def contains_keyword(text: str, keyword: str) -> bool:
+    return keyword.lower() in text.lower()
+
+
+def evaluate_retrieval_keywords(text: str, expected_keywords: List[str]) -> Dict[str, Any]:
+    matched = []
+    missing = []
+
+    for keyword in expected_keywords:
+        if contains_keyword(text, keyword):
+            matched.append(keyword)
+        else:
+            missing.append(keyword)
+
+    total = len(expected_keywords)
+    hit_rate = len(matched) / total if total else 1.0
+
+    return {
+        "expected_keywords_total": total,
+        "expected_keywords_matched": len(matched),
+        "keyword_hit_rate": round(hit_rate, 4),
+        "missing_keywords": "|".join(missing),
+    }
 
 
 def load_ingestion_report() -> Dict[str, Any]:
@@ -89,12 +147,20 @@ def evaluate_retrieval(case: Dict[str, Any]) -> Dict[str, Any]:
 
     retrieval_rank = ""
     retrieval_hit = False
+    matched_text = ""
 
-    for index, filename in enumerate(retrieved_sources, start=1):
+    for index, chunk in enumerate(chunks, start=1):
+        filename = chunk.get("metadata", {}).get("filename")
         if filename == expected_filename:
             retrieval_hit = True
             retrieval_rank = index
+            matched_text = chunk.get("text", "") or ""
             break
+
+    keyword_metrics = evaluate_retrieval_keywords(
+        matched_text,
+        case.get("expected_retrieval_keywords", []),
+    )
 
     return {
         "retrieval_query": query,
@@ -102,6 +168,8 @@ def evaluate_retrieval(case: Dict[str, Any]) -> Dict[str, Any]:
         "retrieval_hit": retrieval_hit,
         "retrieval_rank": retrieval_rank,
         "retrieved_sources": "|".join([source or "" for source in retrieved_sources]),
+        "retrieved_text_preview": matched_text[:300].replace("\n", " "),
+        **keyword_metrics,
     }
 
 
@@ -153,6 +221,7 @@ def evaluate_case(case: Dict[str, Any], report: Dict[str, Any]) -> Dict[str, Any
             pages_without_text_pass,
             extracted_chars_pass,
             retrieval_result["retrieval_hit"],
+            retrieval_result["keyword_hit_rate"] >= 1.0,
         ]
     )
 
@@ -188,6 +257,11 @@ def evaluate_case(case: Dict[str, Any], report: Dict[str, Any]) -> Dict[str, Any
         "retrieval_hit": retrieval_result["retrieval_hit"],
         "retrieval_rank": retrieval_result["retrieval_rank"],
         "retrieved_sources": retrieval_result["retrieved_sources"],
+        "retrieved_text_preview": retrieval_result["retrieved_text_preview"],
+        "expected_keywords_total": retrieval_result["expected_keywords_total"],
+        "expected_keywords_matched": retrieval_result["expected_keywords_matched"],
+        "keyword_hit_rate": retrieval_result["keyword_hit_rate"],
+        "missing_keywords": retrieval_result["missing_keywords"],
         "pass": pass_result,
     }
 
@@ -256,6 +330,11 @@ def write_csv(results: List[Dict[str, Any]], summary: Dict[str, Any]) -> None:
         "retrieval_hit",
         "retrieval_rank",
         "retrieved_sources",
+        "retrieved_text_preview",
+        "expected_keywords_total",
+        "expected_keywords_matched",
+        "keyword_hit_rate",
+        "missing_keywords",
         "pass",
         "total_cases",
         "passing_count",
@@ -342,6 +421,9 @@ def write_markdown(results: List[Dict[str, Any]], summary: Dict[str, Any]) -> No
                 f"- Extracted characters: {result['extracted_chars']}",
                 f"- Retrieval hit: {result['retrieval_hit']}",
                 f"- Retrieval rank: {result['retrieval_rank']}",
+                f"- Keyword hit rate: {result.get('keyword_hit_rate', 1.0)}",
+                f"- Missing keywords: {result.get('missing_keywords', '') or 'None'}",
+                f"- Retrieved text preview: {result.get('retrieved_text_preview', '')}",
                 f"- Pass: {result['pass']}",
                 "",
             ]

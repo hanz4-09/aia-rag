@@ -1,208 +1,285 @@
 import json
-from collections import deque
+import time
 from pathlib import Path
-from threading import Lock
-from typing import Deque, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class InMemorySessionMemory:
     """
-    Backward-compatible in-memory session memory.
-    """
-
-    def __init__(self, max_turns: int = 3):
-        self.max_turns = max_turns
-        self._store: Dict[str, Deque[Dict[str, str]]] = {}
-        self._lock = Lock()
-
-    def get_history(self, session_id: Optional[str]) -> List[Dict[str, str]]:
-        if not session_id:
-            return []
-
-        with self._lock:
-            history = self._store.get(session_id)
-            if not history:
-                return []
-            return list(history)
-
-    def add_turn(
-        self,
-        session_id: Optional[str],
-        question: str,
-        answer: str,
-    ) -> None:
-        if not session_id:
-            return
-
-        if not question.strip() or not answer.strip():
-            return
-
-        with self._lock:
-            if session_id not in self._store:
-                self._store[session_id] = deque(maxlen=self.max_turns)
-
-            self._store[session_id].append(
-                {
-                    "question": question,
-                    "answer": answer,
-                }
-            )
-
-    def clear(self, session_id: Optional[str]) -> None:
-        if not session_id:
-            return
-
-        with self._lock:
-            self._store.pop(session_id, None)
-
-
-class PersistentSessionMemory:
-    """
-    File-backed session memory for Advanced Memory v1.
+    Lightweight session memory for multi-turn RAG.
 
     Features:
-    - keeps recent turns by session_id
-    - persists memory to a local JSON file
-    - restores memory when service restarts
-    - caps both max_turns per session and max_sessions globally
-
-    This is still a local MVP persistence layer, not a production distributed
-    memory store.
+    - keep recent turns per session
+    - enforce max_turns per session
+    - enforce max_sessions globally
+    - optional TTL cleanup
     """
 
     def __init__(
         self,
         max_turns: int = 3,
-        storage_path: str = "data/session_memory/session_memory.json",
         max_sessions: int = 1000,
+        ttl_seconds: Optional[int] = None,
+        cleanup_enabled: bool = True,
     ):
         self.max_turns = max_turns
-        self.storage_path = Path(storage_path)
         self.max_sessions = max_sessions
-        self._store: Dict[str, Deque[Dict[str, str]]] = {}
-        self._lock = Lock()
+        self.ttl_seconds = ttl_seconds
+        self.cleanup_enabled = cleanup_enabled
+        self.sessions: Dict[str, List[Dict[str, str]]] = {}
+        self.session_updated_at: Dict[str, float] = {}
 
-        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
-        self._load_from_disk()
+    def add_turn(self, session_id: Optional[str], question: str, answer: str) -> None:
+        if not session_id:
+            return
 
-    def get_history(self, session_id: Optional[str]) -> List[Dict[str, str]]:
+        self.cleanup_expired_sessions()
+
+        turns = self.sessions.setdefault(session_id, [])
+        turns.append(
+            {
+                "question": question,
+                "answer": answer,
+            }
+        )
+
+        self.sessions[session_id] = turns[-self.max_turns :]
+        self.session_updated_at[session_id] = time.time()
+
+        self.enforce_max_sessions()
+
+    def get_recent_turns(
+        self,
+        session_id: Optional[str],
+        max_turns: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
         if not session_id:
             return []
 
-        with self._lock:
-            history = self._store.get(session_id)
-            if not history:
-                return []
-            return list(history)
+        self.cleanup_expired_sessions()
 
-    def add_turn(
+        turns = self.sessions.get(session_id, [])
+        limit = max_turns or self.max_turns
+        return turns[-limit:]
+
+    def get_history(
         self,
         session_id: Optional[str],
-        question: str,
-        answer: str,
-    ) -> None:
-        if not session_id:
-            return
+        max_turns: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
+        """
+        Backward-compatible alias used by existing multi-turn evaluators.
+        """
+        return self.get_recent_turns(session_id, max_turns=max_turns)
 
-        if not question.strip() or not answer.strip():
-            return
+    def clear_session(self, session_id: str) -> None:
+        self.sessions.pop(session_id, None)
+        self.session_updated_at.pop(session_id, None)
 
-        with self._lock:
-            self._evict_if_needed(session_id)
+    def cleanup_expired_sessions(self) -> int:
+        if not self.cleanup_enabled or not self.ttl_seconds:
+            return 0
 
-            if session_id not in self._store:
-                self._store[session_id] = deque(maxlen=self.max_turns)
+        now = time.time()
+        expired_session_ids = [
+            session_id
+            for session_id, updated_at in self.session_updated_at.items()
+            if now - updated_at > self.ttl_seconds
+        ]
 
-            self._store[session_id].append(
-                {
-                    "question": question.strip(),
-                    "answer": answer.strip(),
-                }
+        for session_id in expired_session_ids:
+            self.clear_session(session_id)
+
+        return len(expired_session_ids)
+
+    def enforce_max_sessions(self) -> int:
+        if self.max_sessions <= 0:
+            return 0
+
+        removed_count = 0
+
+        while len(self.sessions) > self.max_sessions:
+            oldest_session_id = min(
+                self.session_updated_at,
+                key=self.session_updated_at.get,
             )
+            self.clear_session(oldest_session_id)
+            removed_count += 1
 
-            self._save_to_disk()
+        return removed_count
 
-    def clear(self, session_id: Optional[str]) -> None:
-        if not session_id:
-            return
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "max_turns": self.max_turns,
+            "max_sessions": self.max_sessions,
+            "ttl_seconds": self.ttl_seconds,
+            "cleanup_enabled": self.cleanup_enabled,
+            "sessions": self.sessions,
+            "session_updated_at": self.session_updated_at,
+        }
 
-        with self._lock:
-            self._store.pop(session_id, None)
-            self._save_to_disk()
+    def load_dict(self, data: Dict[str, Any]) -> None:
+        self.max_turns = int(data.get("max_turns", self.max_turns))
+        self.max_sessions = int(data.get("max_sessions", self.max_sessions))
+        self.ttl_seconds = data.get("ttl_seconds", self.ttl_seconds)
+        self.cleanup_enabled = bool(data.get("cleanup_enabled", self.cleanup_enabled))
 
-    def clear_all(self) -> None:
-        with self._lock:
-            self._store.clear()
-            self._save_to_disk()
+        self.sessions = data.get("sessions", {}) or {}
 
-    def _evict_if_needed(self, incoming_session_id: str) -> None:
-        if incoming_session_id in self._store:
-            return
+        loaded_updated_at = data.get("session_updated_at", {}) or {}
+        now = time.time()
 
-        if len(self._store) < self.max_sessions:
-            return
+        self.session_updated_at = {
+            session_id: float(loaded_updated_at.get(session_id, now))
+            for session_id in self.sessions
+        }
 
-        # Dicts preserve insertion order in modern Python.
-        oldest_session_id = next(iter(self._store))
-        self._store.pop(oldest_session_id, None)
+        self.cleanup_expired_sessions()
+        self.enforce_max_sessions()
 
-    def _load_from_disk(self) -> None:
-        if not self.storage_path.exists():
+
+class JsonSessionMemory(InMemorySessionMemory):
+    """
+    JSON-backed lightweight session memory.
+
+    This is not a distributed production memory store, but it provides simple
+    local persistence for demo and evaluation scenarios.
+    """
+
+    def __init__(
+        self,
+        path: str | Path,
+        max_turns: int = 3,
+        max_sessions: int = 1000,
+        ttl_seconds: Optional[int] = None,
+        cleanup_enabled: bool = True,
+    ):
+        super().__init__(
+            max_turns=max_turns,
+            max_sessions=max_sessions,
+            ttl_seconds=ttl_seconds,
+            cleanup_enabled=cleanup_enabled,
+        )
+        self.path = Path(path)
+        self.load()
+
+    def load(self) -> None:
+        if not self.path.exists():
             return
 
         try:
-            raw = json.loads(self.storage_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            self._store = {}
-            return
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            self.load_dict(data)
+        except Exception:
+            # Avoid breaking the service because of a corrupted demo memory file.
+            self.sessions = {}
+            self.session_updated_at = {}
 
-        sessions = raw.get("sessions", {})
-
-        for session_id, turns in sessions.items():
-            self._store[session_id] = deque(
-                [
-                    {
-                        "question": str(turn.get("question", "")),
-                        "answer": str(turn.get("answer", "")),
-                    }
-                    for turn in turns
-                    if turn.get("question") or turn.get("answer")
-                ],
-                maxlen=self.max_turns,
-            )
-
-    def _save_to_disk(self) -> None:
-        payload = {
-            "max_turns": self.max_turns,
-            "max_sessions": self.max_sessions,
-            "sessions": {
-                session_id: list(turns)
-                for session_id, turns in self._store.items()
-            },
-        }
-
-        tmp_path = self.storage_path.with_suffix(".tmp")
-        tmp_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            json.dumps(self.to_dict(), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        tmp_path.replace(self.storage_path)
+
+    def add_turn(self, session_id: Optional[str], question: str, answer: str) -> None:
+        super().add_turn(session_id, question, answer)
+        self.save()
+
+    def get_recent_turns(
+        self,
+        session_id: Optional[str],
+        max_turns: Optional[int] = None,
+    ) -> List[Dict[str, str]]:
+        turns = super().get_recent_turns(session_id, max_turns=max_turns)
+        self.save()
+        return turns
+
+    def clear_session(self, session_id: str) -> None:
+        super().clear_session(session_id)
+        self.save()
+
+    def cleanup_expired_sessions(self) -> int:
+        removed_count = super().cleanup_expired_sessions()
+        return removed_count
+
+    def enforce_max_sessions(self) -> int:
+        removed_count = super().enforce_max_sessions()
+        return removed_count
 
 
-def create_session_memory(config: Dict) -> object:
-    memory_config = config.get("memory", {})
 
-    memory_type = memory_config.get("type", "in_memory").lower()
-    max_turns = memory_config.get("max_turns", 3)
+class PersistentSessionMemory(JsonSessionMemory):
+    """
+    Backward-compatible alias for earlier advanced-memory evaluation scripts.
 
-    if memory_type == "persistent":
-        return PersistentSessionMemory(
-            max_turns=max_turns,
-            storage_path=memory_config.get(
-                "storage_path",
-                "data/session_memory/session_memory.json",
-            ),
-            max_sessions=memory_config.get("max_sessions", 1000),
+    Older code imported PersistentSessionMemory directly. The new implementation
+    uses JsonSessionMemory for local persistent memory, so this class preserves
+    the previous public name while reusing the TTL/cleanup-capable JSON backend.
+    """
+
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        memory_path: str | Path | None = None,
+        file_path: str | Path | None = None,
+        storage_path: str | Path | None = None,
+        max_turns: int = 3,
+        max_sessions: int = 1000,
+        ttl_seconds: Optional[int] = None,
+        cleanup_enabled: bool = True,
+    ):
+        resolved_path = (
+            path
+            or memory_path
+            or file_path
+            or storage_path
+            or "data/session_memory/session_memory.json"
         )
 
-    return InMemorySessionMemory(max_turns=max_turns)
+        super().__init__(
+            path=resolved_path,
+            max_turns=max_turns,
+            max_sessions=max_sessions,
+            ttl_seconds=ttl_seconds,
+            cleanup_enabled=cleanup_enabled,
+        )
+
+
+def create_session_memory(config: Dict[str, Any]):
+    memory_config = config.get("memory", {})
+
+    enabled = memory_config.get("enabled", True)
+    if not enabled:
+        return InMemorySessionMemory(max_turns=0, max_sessions=0)
+
+    memory_type = memory_config.get("type", "in_memory")
+    max_turns = int(memory_config.get("max_turns", 3))
+    max_sessions = int(memory_config.get("max_sessions", 1000))
+    ttl_seconds = memory_config.get("ttl_seconds")
+    cleanup_enabled = bool(memory_config.get("cleanup_enabled", True))
+
+    if ttl_seconds in ("", None):
+        ttl_seconds = None
+    elif ttl_seconds is not None:
+        ttl_seconds = int(ttl_seconds)
+
+    if memory_type in {"json", "file", "json_file"}:
+        path = memory_config.get(
+            "path",
+            "data/session_memory/session_memory.json",
+        )
+        return JsonSessionMemory(
+            path=path,
+            max_turns=max_turns,
+            max_sessions=max_sessions,
+            ttl_seconds=ttl_seconds,
+            cleanup_enabled=cleanup_enabled,
+        )
+
+    return InMemorySessionMemory(
+        max_turns=max_turns,
+        max_sessions=max_sessions,
+        ttl_seconds=ttl_seconds,
+        cleanup_enabled=cleanup_enabled,
+    )

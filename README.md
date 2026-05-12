@@ -651,7 +651,21 @@ Important evaluation and diagnosis reports:
 - `reports/diagnosis/2026-05-11_operations_report_runtime_sample_enhancement_report.md`
 - `reports/diagnosis/2026-05-11_issue_diagnosis_summary.md`
 - `reports/diagnosis/2026-05-11_model_selection_rationale.md`
+- `reports/diagnosis/2026-05-12_retrieval_comparison_summary_report.md`
+- `reports/diagnosis/2026-05-12_llm_judge_methodology_report.md`
+- `reports/diagnosis/2026-05-12_reviewer_reproducibility_guide.md`
+- `reports/diagnosis/2026-05-12_embedding_model_switch_bge_m3_report.md`
+- `reports/diagnosis/2026-05-12_multiturn_evaluation_expansion_report.md`
+- `reports/diagnosis/2026-05-12_ocr_evaluation_expansion_report.md`
+- `reports/diagnosis/2026-05-12_corpus_growth_regression_evaluation_report.md`
+- `reports/diagnosis/2026-05-12_trace_fields_observability_report.md`
+- `reports/diagnosis/2026-05-12_session_memory_ttl_cleanup_report.md`
+- `reports/diagnosis/2026-05-12_error_timeout_handling_framework_report.md`
+- `reports/diagnosis/2026-05-12_secrets_scanning_before_ingestion_report.md`
+- `reports/diagnosis/2026-05-12_provider_fallback_model_strategy_report.md`
+- `reports/diagnosis/2026-05-12_final_demo_smoke_test_report.md`
 - `reports/observability/log_field_dictionary.md`
+- `reports/diagnosis/2026-05-12_prompt_injection_benchmark_expansion_report.md`
 - `reports/optimization_log.md`
 
 ---

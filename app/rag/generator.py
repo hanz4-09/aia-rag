@@ -444,14 +444,117 @@ class LLMGenerator:
             phrase in normalized_answer for phrase in insufficient_phrases
         )
 
+
+class FallbackGenerator:
+    """
+    Generator wrapper that tries a primary generator first and falls back to
+    a safer backup generator if the primary generator raises an exception.
+
+    Current intended usage:
+    - primary: LLMGenerator
+    - fallback: ExtractiveGenerator
+
+    This improves service availability when the LLM provider is temporarily
+    unavailable, rate-limited, or failing.
+    """
+
+    def __init__(
+        self,
+        primary_generator,
+        fallback_generator,
+        fallback_enabled: bool = True,
+    ):
+        self.primary_generator = primary_generator
+        self.fallback_generator = fallback_generator
+        self.fallback_enabled = fallback_enabled
+
+    def generate(
+        self,
+        question: str,
+        retrieved_chunks: List[Dict[str, Any]],
+        conversation_history: Optional[List[Dict[str, str]]] = None,
+    ) -> Dict[str, Any]:
+        primary_model_name = getattr(
+            self.primary_generator,
+            "model_name",
+            None,
+        )
+        primary_generator_type = self._generator_type(self.primary_generator)
+        fallback_generator_type = self._generator_type(self.fallback_generator)
+
+        try:
+            result = self.primary_generator.generate(
+                question=question,
+                retrieved_chunks=retrieved_chunks,
+                conversation_history=conversation_history,
+            )
+
+            result["fallback_applied"] = False
+            result["fallback_reason"] = None
+            result["primary_model_name"] = primary_model_name
+            result["primary_generator_type"] = primary_generator_type
+            result["fallback_generator_type"] = fallback_generator_type
+            result["final_generator_type"] = result.get("generator_type")
+            result["final_model_name"] = result.get("model_name")
+
+            return result
+
+        except Exception as exc:
+            if not self.fallback_enabled:
+                raise
+
+            fallback_result = self.fallback_generator.generate(
+                question=question,
+                retrieved_chunks=retrieved_chunks,
+                conversation_history=conversation_history,
+            )
+
+            fallback_result["fallback_applied"] = True
+            fallback_result["fallback_reason"] = "primary_generation_error"
+            fallback_result["fallback_error_type"] = type(exc).__name__
+            fallback_result["fallback_error_message"] = str(exc)[:500]
+            fallback_result["primary_model_name"] = primary_model_name
+            fallback_result["primary_generator_type"] = primary_generator_type
+            fallback_result["fallback_generator_type"] = fallback_generator_type
+            fallback_result["final_generator_type"] = fallback_result.get(
+                "generator_type"
+            )
+            fallback_result["final_model_name"] = fallback_result.get(
+                "model_name"
+            )
+
+            return fallback_result
+
+    @staticmethod
+    def _generator_type(generator) -> str:
+        if isinstance(generator, ExtractiveGenerator):
+            return "extractive"
+
+        if isinstance(generator, LLMGenerator):
+            return "llm"
+
+        return generator.__class__.__name__
+
+
 def create_generator(config: Dict[str, Any]):
     generator_config = config.get("generator", {})
-    generator_type = generator_config.get("type", "extractive").lower()
+    generator_type = generator_config.get("type", "extractive")
+    fallback_type = generator_config.get("fallback_type")
+    fallback_enabled = bool(generator_config.get("fallback_enabled", True))
+
+    if generator_type == "llm":
+        primary_generator = LLMGenerator(config)
+
+        if fallback_enabled and fallback_type == "extractive":
+            return FallbackGenerator(
+                primary_generator=primary_generator,
+                fallback_generator=ExtractiveGenerator(),
+                fallback_enabled=True,
+            )
+
+        return primary_generator
 
     if generator_type == "extractive":
         return ExtractiveGenerator()
-
-    if generator_type == "llm":
-        return LLMGenerator(config)
 
     raise ValueError(f"Unsupported generator type: {generator_type}")

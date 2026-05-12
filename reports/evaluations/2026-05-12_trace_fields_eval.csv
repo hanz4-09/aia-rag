@@ -1,0 +1,3 @@
+row_type,row_index,request_id,trace_id,span_id,memory_span_id,retrieval_span_id,rerank_span_id,generation_span_id,trace_schema_version,missing_fields,empty_required_fields,trace_id_matches_request_id,span_format_ok,schema_version_ok,pass,total_logs,trace_enabled_logs,passing_count,pass_rate,trace_coverage_rate,prd_pass
+summary,,,,,,,,,,,,,,,,40,1,1,1.0,0.025,True
+detail,1,d728e9b2-00e2-4c68-b1ff-7831130e342d,d728e9b2-00e2-4c68-b1ff-7831130e342d,ec134771040c4928,0da4709e92e948c2,84cd8fb941a546cf,1688affa2a8a462b,a5d5e131ee5e426d,otel-lite-v1,,,True,True,True,True,,,,,,

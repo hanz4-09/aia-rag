@@ -92,9 +92,9 @@ This is a rule-based compliance evaluation, not an LLM-as-judge evaluation.
 | Source Hit Rate | 1.0 |
 | Forbidden Keywords Clean Rate | 1.0 |
 | Avg Expected Keywords Hit Rate | 0.9417 |
-| Avg Total Latency ms | 2559.07 |
-| Avg Generation Latency ms | 2547.67 |
-| Avg Total Tokens | 937.76 |
+| Avg Total Latency ms | 2611.67 |
+| Avg Generation Latency ms | 2565.43 |
+| Avg Total Tokens | 981.93 |
 
 ---
 

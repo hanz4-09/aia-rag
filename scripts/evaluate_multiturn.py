@@ -68,6 +68,51 @@ MULTITURN_CASES = [
         ],
         "expected_source": "01_employee_handbook_en.txt",
     },
+
+    {
+        "case_id": "mt_audit_log_required_fields",
+        "category": "compliance_en",
+        "session_id": "eval-multiturn-audit-fields-001",
+        "turns": [
+            "What are the audit logging requirements?",
+            "What fields must be included in those logs?",
+        ],
+        "expected_source": "03_compliance_guide_en.txt",
+        "expected_keywords": [
+            "timestamp",
+            "user identity",
+            "action type",
+            "request ID",
+            "result status",
+        ],
+    },
+    {
+        "case_id": "mt_api_key_report_recipient_cn",
+        "category": "security_cn",
+        "session_id": "eval-multiturn-apikey-recipient-001",
+        "turns": [
+            "API Key 泄露后应该怎么处理？",
+            "应该通知谁？",
+        ],
+        "expected_source": "04_data_security_policy_cn.txt",
+        "expected_keywords": [
+            "Security Operations",
+        ],
+    },
+    {
+        "case_id": "mt_ocr_api_key_report_window",
+        "category": "ocr_en",
+        "session_id": "eval-multiturn-ocr-apikey-001",
+        "turns": [
+            "What does the scanned OCR test document say about API Key incidents?",
+            "Within how many hours should they be reported?",
+        ],
+        "expected_source": "99_scanned_pdf_detection_test.pdf",
+        "expected_keywords": [
+            "24 hours",
+        ],
+    },
+
 ]
 
 

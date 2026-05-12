@@ -5,6 +5,7 @@ app:
 generator:
   type: llm
   fallback_type: extractive
+  fallback_enabled: true
 
 llm:
   provider: bailian
@@ -18,8 +19,8 @@ llm:
 #   temperature: 0.1
 
 embedding:
-  provider: openai
-  model: text-embedding-3-small
+  provider: huggingface
+  model: BAAI/bge-m3
 
 retrieval:
   mode: hybrid
@@ -67,6 +68,8 @@ memory:
   max_sessions: 1000
   storage_path: ./data/session_memory/session_memory.json
   enable_query_rewrite: true
+  ttl_seconds: 86400
+  cleanup_enabled: true
 
 ocr:
   enabled: true
@@ -74,3 +77,19 @@ ocr:
   render_dpi: 220
   min_ocr_chars: 10
   tesseract_cmd: "C:/Program Files/Tesseract-OCR/tesseract.exe"
+
+secrets_scan:
+  enabled: true
+  fail_on_detected: false
+  supported_suffixes:
+    - .txt
+    - .md
+    - .json
+    - .yaml
+    - .yml
+    - .env
+    - .csv
+    - .py
+    - .java
+    - .properties
+    - .ini

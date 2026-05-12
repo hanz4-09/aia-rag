@@ -567,3 +567,94 @@ The one-click evaluation suite now includes 13 tasks, including pii_redaction.
 Current status:
 
     PII Redaction Evaluation: Completed
+
+---
+
+## 13. Final Closeout Update - 2026-05-12
+
+This section records the final project closeout updates after additional P1/P2 hardening and evaluation expansion.
+
+### 13.1 Final Core Status
+
+The project has completed the core RAG case study requirements:
+
+- document ingestion
+- text/PDF/scanned PDF handling
+- OCR extraction
+- chunking
+- local HuggingFace embedding using `BAAI/bge-m3`
+- Chroma vector store
+- hybrid retrieval
+- reranking
+- context assembly
+- LLM generation
+- multi-turn QA
+- Advanced Memory v1
+- structured JSONL logging
+- operations report generation
+- PII redaction
+- prompt injection protection
+- answer/refusal/context/style/faithfulness evaluations
+
+Final core evaluation summary:
+
+    reports/evaluations/2026-05-12_all_evaluations_summary.csv
+    reports/evaluations/2026-05-12_all_evaluations_summary.md
+
+Final summary result:
+
+    total_tasks = 13
+    tasks_with_available_reports = 13
+    failed_or_missing_tasks = 0
+
+### 13.2 Final P1 Enhancements Completed
+
+The following P1 delivery-quality enhancements were completed:
+
+| Area | Status | Report |
+|---|---|---|
+| HTTP-level load testing | Completed | `reports/diagnosis/2026-05-12_http_load_evaluation_report.md` |
+| Larger evaluation set - prompt injection | Completed | `reports/diagnosis/2026-05-12_prompt_injection_benchmark_expansion_report.md` |
+| Larger evaluation set - multi-turn QA | Completed | `reports/diagnosis/2026-05-12_multiturn_evaluation_expansion_report.md` |
+| Larger evaluation set - OCR | Completed | `reports/diagnosis/2026-05-12_ocr_evaluation_expansion_report.md` |
+| Retrieval comparison summary visibility | Completed | `reports/diagnosis/2026-05-12_retrieval_comparison_summary_report.md` |
+| PII false positive / false negative benchmark | Completed | `reports/evaluations/2026-05-12_pii_redaction_eval.csv` |
+| LLM judge methodology documentation | Completed | `reports/diagnosis/2026-05-12_llm_judge_methodology_report.md` |
+| Reviewer reproducibility guide | Completed | `reports/diagnosis/2026-05-12_reviewer_reproducibility_guide.md` |
+| OpenTelemetry-style trace fields | Completed | `reports/diagnosis/2026-05-12_trace_fields_observability_report.md` |
+
+Skipped or deferred:
+
+- Dockerfile with Tesseract runtime template: deferred until Docker is available locally.
+- CI quality gates: skipped for now.
+- Repo hygiene cleanup: skipped for now.
+
+### 13.3 Final P2 Production-hardening Completed
+
+The following P2 production-hardening enhancements were completed:
+
+| Area | Status | Report |
+|---|---|---|
+| Session memory TTL / cleanup | Completed | `reports/diagnosis/2026-05-12_session_memory_ttl_cleanup_report.md` |
+| Error / timeout handling framework | Completed | `reports/diagnosis/2026-05-12_error_timeout_handling_framework_report.md` |
+| Secrets scanning before ingestion | Completed | `reports/diagnosis/2026-05-12_secrets_scanning_before_ingestion_report.md` |
+| Provider fallback model strategy | Completed | `reports/diagnosis/2026-05-12_provider_fallback_model_strategy_report.md` |
+| Corpus growth regression evaluation | Completed | `reports/diagnosis/2026-05-12_corpus_growth_regression_evaluation_report.md` |
+
+Skipped or deferred:
+
+- Redis/PostgreSQL distributed memory: skipped for now.
+- Full Prometheus/Grafana dashboards: not implemented.
+- Production OCR pipeline: deferred.
+- Async LLM/retriever pipeline: not implemented.
+- Role-based access control: not implemented.
+
+### 13.4 Final Closeout Conclusion
+
+Final status:
+
+    PASS
+
+The project is ready for final submission, reviewer inspection, and interview/demo usage.
+
+The remaining items are production-scale enhancements and are not blockers for the current PRD-aligned case study.

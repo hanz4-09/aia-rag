@@ -360,7 +360,23 @@ def write_summary_csv(rows: List[Dict[str, object]]) -> None:
 
 
 def write_summary_markdown(rows: List[Dict[str, object]], mode: str) -> None:
-    passed_tasks = sum(1 for row in rows if row.get("status") == "success")
+    successful_tasks = sum(1 for row in rows if row.get("status") == "success")
+    skipped_tasks = sum(1 for row in rows if row.get("status") == "skipped")
+    report_available_tasks = sum(
+        1
+        for row in rows
+        if row.get("status") in {"success", "skipped"}
+        and bool(row.get("report_path"))
+    )
+    failed_or_missing_tasks = sum(
+        1
+        for row in rows
+        if row.get("status") in {"failed", "missing"}
+        or (
+            row.get("status") == "skipped"
+            and not bool(row.get("report_path"))
+        )
+    )
     total_tasks = len(rows)
 
     lines = [
@@ -375,8 +391,10 @@ def write_summary_markdown(rows: List[Dict[str, object]], mode: str) -> None:
         "## 1. Summary",
         "",
         f"- Total tasks: {total_tasks}",
-        f"- Successful tasks: {passed_tasks}",
-        f"- Failed or missing tasks: {total_tasks - passed_tasks}",
+        f"- Successful tasks: {successful_tasks}",
+        f"- Skipped tasks: {skipped_tasks}",
+        f"- Tasks with available reports: {report_available_tasks}",
+        f"- Failed or missing tasks: {failed_or_missing_tasks}",
         "",
         "---",
         "",

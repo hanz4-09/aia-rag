@@ -1,6 +1,6 @@
 import csv
 import json
-import shutil
+import tempfile
 import sys
 import time
 from pathlib import Path
@@ -23,7 +23,7 @@ TODAY = time.strftime("%Y-%m-%d")
 CSV_REPORT_PATH = OUTPUT_DIR / f"{TODAY}_advanced_memory_eval.csv"
 MD_REPORT_PATH = OUTPUT_DIR / f"{TODAY}_advanced_memory_eval.md"
 
-MEMORY_EVAL_DIR = PROJECT_ROOT / "data" / "session_memory_eval"
+MEMORY_EVAL_DIR = Path(tempfile.gettempdir()) / "aia_rag_session_memory_eval" / time.strftime("%Y%m%d_%H%M%S")
 MEMORY_EVAL_PATH = MEMORY_EVAL_DIR / "advanced_memory_eval.json"
 
 
@@ -470,8 +470,6 @@ def write_markdown(results: List[Dict[str, Any]], summary: Dict[str, Any]) -> No
 
 
 def main():
-    if MEMORY_EVAL_DIR.exists():
-        shutil.rmtree(MEMORY_EVAL_DIR)
 
     config = load_config()
     retriever = create_retriever(config)
