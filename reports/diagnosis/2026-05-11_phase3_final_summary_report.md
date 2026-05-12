@@ -532,3 +532,38 @@ Current status:
 Remaining future enhancement:
 
     Production-grade OCR hardening, including multilingual OCR packs, OCR confidence logging, preprocessing, and containerized Tesseract runtime.
+
+---
+
+## 12. PII Redaction Evaluation Update
+
+After the initial Phase 3 validation, a dedicated PII redaction evaluation was added.
+
+Completed capabilities:
+
+- email redaction
+- phone number redaction
+- API key redaction
+- access token redaction
+- secret value redaction
+- ID number redaction
+- mixed PII input validation
+
+Formal evaluation:
+
+    scripts/evaluate_pii_redaction.py
+
+Final result:
+
+    total_cases = 7
+    passing_count = 7
+    pass_rate = 1.0
+    forbidden_clean_rate = 1.0
+    placeholder_present_rate = 1.0
+    PRD Status = PASS
+
+The one-click evaluation suite now includes 13 tasks, including pii_redaction.
+
+Current status:
+
+    PII Redaction Evaluation: Completed

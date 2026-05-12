@@ -1,19 +1,19 @@
-可以。下面这版是基于你刚上传的 README 重新整理后的**完整替换版**，重点修复了 Future Work / Caveats 里和当前项目状态冲突的内容，并把 Advanced Memory v1、OCR Extraction、Cache、12-task one-click evaluation、operations report 增强等信息合并到主线说明里。
-
-你可以直接用它整体替换 `README.md`。
-
-```markdown
 # AIA RAG Case Study Service
 
 A configurable RAG QA service over an internal knowledge base.
 
-This project is a RAG + Generative AI engineering case study. It supports document ingestion, chunking, local embedding generation, Chroma vector storage, hybrid retrieval, reranking, LLM-based generation, multi-turn QA, Advanced Memory v1, OCR extraction for scanned PDFs, refusal handling, PII redaction, structured logging, operations reporting, and formal evaluation.
+This project is a RAG + Generative AI engineering case study.
+
+It supports document ingestion, chunking, local embedding generation, Chroma vector storage,
+hybrid retrieval, reranking, LLM-based generation, multi-turn QA, Advanced Memory v1,
+OCR extraction for scanned PDFs, refusal handling, PII redaction, structured logging,
+operations reporting, and formal evaluation.
 
 This repository is intended as an engineering case study and evaluation-driven prototype, not a production deployment.
 
 Current phase: Phase 3 completed  
 Final validation model: qwen-max  
-One-click evaluation tasks: 12
+One-click evaluation tasks: 13
 
 ---
 
@@ -35,6 +35,7 @@ One-click evaluation tasks: 12
 - Refuse prompt-injection and secret-extraction requests
 - Refuse out-of-scope or low-confidence requests
 - Redact basic PII before logging
+- Run formal PII redaction evaluation
 - Support lightweight multi-turn QA
 - Support Advanced Memory v1
 - Persist session memory locally
@@ -456,6 +457,7 @@ Core quality evaluations:
 
 Capability evaluations:
 
+    python scripts/evaluate_pii_redaction.py
     python scripts/evaluate_multiturn.py
     python scripts/evaluate_cache.py
     python scripts/evaluate_advanced_memory.py
@@ -482,7 +484,7 @@ Run only performance evaluations:
 
     python scripts/run_all_evaluations.py --mode performance
 
-The current one-click evaluation suite includes 12 tasks:
+The current one-click evaluation suite includes 13 tasks:
 
 1. operations_report
 2. answer_compliance
@@ -490,12 +492,13 @@ The current one-click evaluation suite includes 12 tasks:
 4. context_precision
 5. faithfulness_llm_judge
 6. style_consistency
-7. multiturn_qa
-8. cache
-9. pdf_ingestion
-10. advanced_memory
-11. latency
-12. concurrency
+7. pii_redaction
+8. multiturn_qa
+9. cache
+10. pdf_ingestion
+11. advanced_memory
+12. latency
+13. concurrency
 
 ---
 
@@ -518,6 +521,7 @@ Final results:
 | Avg Context Precision | 0.9807 |
 | Avg Faithfulness | 1.0 |
 | Avg Style Consistency | 0.994 |
+| Formal PII Redaction Pass Rate | 1.0 |
 | Multi-turn QA Pass Rate | 1.0 |
 | Advanced Memory Pass Rate | 1.0 |
 | Cache Evaluation Pass Rate | 1.0 |
@@ -595,12 +599,43 @@ Remaining future enhancement:
 
 ---
 
-## 17. Key Reports
+## 17. PII Redaction Evaluation
+
+Basic PII redaction is implemented and formally evaluated.
+
+Implemented redaction types:
+
+- email address
+- phone number
+- API key value
+- access token value
+- secret value
+- 15 to 18 digit ID number
+- mixed PII input
+
+Formal evaluation:
+
+- Script: `scripts/evaluate_pii_redaction.py`
+- Report: `reports/evaluations/2026-05-11_pii_redaction_eval.csv`
+- Pass rate: 1.0
+- Forbidden clean rate: 1.0
+- Placeholder present rate: 1.0
+
+Remaining future enhancement:
+
+- richer PII pattern coverage
+- false-positive and false-negative benchmark cases
+- multilingual PII detection
+
+---
+
+## 18. Key Reports
 
 Important evaluation and diagnosis reports:
 
 - `reports/evaluations/2026-05-11_all_evaluations_summary.csv`
 - `reports/evaluations/2026-05-11_all_evaluations_summary.md`
+- `reports/evaluations/2026-05-11_pii_redaction_eval.csv`
 - `reports/evaluations/2026-05-11_advanced_memory_eval.csv`
 - `reports/evaluations/2026-05-11_pdf_ingestion_eval.csv`
 - `reports/evaluations/2026-05-11_cache_eval.csv`
@@ -610,6 +645,7 @@ Important evaluation and diagnosis reports:
 - `reports/operations_report.csv`
 - `reports/diagnosis/2026-05-11_phase3_final_summary_report.md`
 - `reports/diagnosis/2026-05-11_qwen_max_full_evaluation_revalidation_report.md`
+- `reports/diagnosis/2026-05-11_pii_redaction_evaluation_report.md`
 - `reports/diagnosis/2026-05-11_advanced_memory_v1_evaluation_report.md`
 - `reports/diagnosis/2026-05-11_ocr_extraction_evaluation_report.md`
 - `reports/diagnosis/2026-05-11_operations_report_runtime_sample_enhancement_report.md`
@@ -620,7 +656,7 @@ Important evaluation and diagnosis reports:
 
 ---
 
-## 18. Known Caveats
+## 19. Known Caveats
 
 Current known caveats:
 
@@ -635,7 +671,7 @@ Current known caveats:
 
 ---
 
-## 19. Future Work
+## 20. Future Work
 
 Potential next steps:
 
@@ -652,7 +688,7 @@ Potential next steps:
 
 ---
 
-## 20. PRD Alignment Summary
+## 21. PRD Alignment Summary
 
 The current implementation satisfies the main PRD requirements:
 
@@ -663,6 +699,7 @@ The current implementation satisfies the main PRD requirements:
 - Reranker configuration: completed
 - Refusal and safety handling: completed
 - Basic PII redaction: completed
+- Formal PII redaction evaluation: completed
 - Structured JSONL logging: completed
 - Minimal operations report: completed
 - Cache behavior: completed
@@ -681,4 +718,3 @@ The current implementation satisfies the main PRD requirements:
 - Log field dictionary and sample logs: completed
 
 The remaining items are future engineering hardening tasks rather than current PRD blockers.
-```
