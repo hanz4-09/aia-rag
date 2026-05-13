@@ -1,0 +1,14 @@
+{"question": "What is the annual leave policy?", "expected_source": "01_employee_handbook_en.txt", "category": "hr_policy"}
+{"question": "How many working days in advance should employees submit annual leave requests?", "expected_source": "01_employee_handbook_en.txt", "category": "hr_policy"}
+{"question": "员工病假需要提供什么材料？", "expected_source": "02_employee_handbook_cn.txt", "category": "hr_policy_cn"}
+{"question": "远程办公时可以使用个人设备访问公司系统吗？", "expected_source": "02_employee_handbook_cn.txt", "category": "hr_policy_cn"}
+{"question": "What are the audit logging requirements?", "expected_source": "03_compliance_guide_en.txt", "category": "compliance"}
+{"question": "How long should audit logs for privileged operations be retained?", "expected_source": "03_compliance_guide_en.txt", "category": "compliance"}
+{"question": "What should employees do after a suspected compliance incident?", "expected_source": "03_compliance_guide_en.txt", "category": "compliance"}
+{"question": "API Key 泄露后应该怎么处理？", "expected_source": "04_data_security_policy_cn.txt", "category": "security_cn"}
+{"question": "日志中是否可以记录明文密码和完整 API Key？", "expected_source": "04_data_security_policy_cn.txt", "category": "security_cn"}
+{"question": "What endpoints does the AKP Platform provide?", "expected_source": "05_akp_technical_specification_en.txt", "category": "technical_spec"}
+{"question": "What fields are included in the chat log data model?", "expected_source": "05_akp_technical_specification_en.txt", "category": "technical_spec"}
+{"question": "AKP Platform 的核心模块有哪些？", "expected_source": "06_akp_architecture_document_cn.txt", "category": "architecture_cn"}
+{"question": "系统在检索置信度不足时应该怎么处理？", "expected_source": "06_akp_architecture_document_cn.txt", "category": "architecture_cn"}
+{"question": "未来系统如何支持 cache？", "expected_source": "06_akp_architecture_document_cn.txt", "category": "architecture_cn"}

@@ -57,15 +57,15 @@ Total requests executed:
 | Success Rate | 1.0 |
 | Within 10s Count | 5 |
 | Within 10s Rate | 1.0 |
-| Avg Latency ms | 3157.6 |
-| P50 Latency ms | 2870.0 |
-| P90 Latency ms | 5458.2 |
-| P95 Latency ms | 5915.6 |
-| Max Latency ms | 6373 |
-| Wall-clock Latency ms | 6377 |
-| Prebuild Latency ms | 44420 |
-| Avg Retrieval Latency ms | 88.4 |
-| Avg Generation Latency ms | 3068 |
+| Avg Latency ms | 2804.6 |
+| P50 Latency ms | 2596.0 |
+| P90 Latency ms | 4141.2 |
+| P95 Latency ms | 4422.6 |
+| Max Latency ms | 4704 |
+| Wall-clock Latency ms | 4706 |
+| Prebuild Latency ms | 48011 |
+| Avg Retrieval Latency ms | 560 |
+| Avg Generation Latency ms | 2243.6 |
 | Required Success Rate | 1.0 |
 | Required Within 10s Rate | 0.9 |
 | PRD Pass | True |

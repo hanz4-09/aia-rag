@@ -56,15 +56,15 @@ Measured metrics:
 | Successful Requests | 30 |
 | Failed Requests | 0 |
 | Success Rate | 1.0 |
-| Within 10s Count | 29 |
-| Within 10s Rate | 0.9667 |
-| Avg Latency ms | 3102 |
-| P50 Latency ms | 2545.0 |
-| P90 Latency ms | 5248.0 |
-| P95 Latency ms | 7153.7 |
-| Max Latency ms | 10591 |
-| Avg Retrieval Latency ms | 10.97 |
-| Avg Generation Latency ms | 3090.47 |
+| Within 10s Count | 30 |
+| Within 10s Rate | 1.0 |
+| Avg Latency ms | 2323.73 |
+| P50 Latency ms | 1737.5 |
+| P90 Latency ms | 4375.0 |
+| P95 Latency ms | 5677.05 |
+| Max Latency ms | 8806 |
+| Avg Retrieval Latency ms | 45 |
+| Avg Generation Latency ms | 2277.93 |
 | PRD Latency Threshold ms | 10000 |
 | Required Within-threshold Rate | 0.9 |
 | PRD Pass | True |
@@ -79,7 +79,7 @@ PRD target:
 
 Current result:
 
-    within_10s_rate = 0.9667
+    within_10s_rate = 1.0
 
 Status:
 

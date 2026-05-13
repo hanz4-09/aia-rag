@@ -1,7 +1,7 @@
 row_type,request_index,question,category,expected_refused,actual_refused,refusal_reason,success,within_10s,retrieval_latency_ms,generation_latency_ms,total_latency_ms,input_tokens,output_tokens,total_tokens,model_name,generator_type,error,total_requests,concurrency_level,successful_requests,failed_requests,success_rate,within_10s_count,within_10s_rate,avg_latency_ms,p50_latency_ms,p90_latency_ms,p95_latency_ms,max_latency_ms,wall_clock_latency_ms,prebuild_latency_ms,avg_retrieval_latency_ms,avg_generation_latency_ms,prd_required_success_rate,prd_required_within_10s_rate,prd_pass
-summary,,,,,,,,,,,,,,,,,,5,5,5,0,1.0,5,1.0,3157.6,2870.0,5458.2,5915.6,6373,6377,44420,88.4,3068,1.0,0.9,True
-detail,1,What are the audit logging requirements?,compliance,False,False,,True,True,87,2781,2870,598,86,684,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
-detail,2,How long should audit logs for privileged operations be retained?,compliance,False,False,,True,True,92,1249,1342,599,14,613,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
-detail,3,What are the data classification levels in the company?,compliance,False,False,,True,True,85,6287,6373,626,66,692,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
-detail,4,How often should privileged access be reviewed?,compliance,False,False,,True,True,87,1029,1117,599,12,611,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
-detail,5,What is the policy on using generative AI tools with company data?,compliance,False,False,,True,True,91,3994,4086,586,74,660,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
+summary,,,,,,,,,,,,,,,,,,5,5,5,0,1.0,5,1.0,2804.6,2596.0,4141.2,4422.6,4704,4706,48011,560,2243.6,1.0,0.9,True
+detail,1,What are the audit logging requirements?,compliance,False,False,,True,True,550,4152,4704,633,86,719,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
+detail,2,How long should audit logs for privileged operations be retained?,compliance,False,False,,True,True,564,1261,1825,629,14,643,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
+detail,3,What are the data classification levels in the company?,compliance,False,False,,True,True,570,2025,2596,914,66,980,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
+detail,4,How often should privileged access be reviewed?,compliance,False,False,,True,True,554,1046,1601,824,9,833,qwen-max,llm,,,,,,,,,,,,,,,,,,,,
+detail,5,What is the policy on using generative AI tools with company data?,compliance,False,False,,True,True,562,2734,3297,881,74,955,qwen-max,llm,,,,,,,,,,,,,,,,,,,,

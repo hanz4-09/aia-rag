@@ -1,29 +1,66 @@
-# Environment variables
-.env
-
-# Virtual environment
-.venv/
-venv/
-
-# Python cache
+# =========================
+# Python
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Chroma vector database
-data/chroma/
+# =========================
+# Virtual environments
+# =========================
+.venv/
+venv/
+env/
+ENV/
 
-# Logs
-logs/
-*.log
-*.jsonl
+# =========================
+# Environment variables / secrets
+# =========================
+.env
+.env.*
+!.env.example
 
-# Reports generated locally
-reports/operations_report.csv
-
-# OS / editor files
-.DS_Store
-Thumbs.db
+# =========================
+# IDE / OS
+# =========================
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+
+# =========================
+# Local vector store / generated data
+# =========================
+data/chroma/
+data/session_memory/
+data/session_memory_eval/
+
+# Keep raw demo documents trackable unless you explicitly want to ignore them.
+# data/raw/
+
+# =========================
+# Runtime logs
+# =========================
+logs/*.jsonl
+logs/*.log
+
+# =========================
+# PRD one-command evaluation run outputs
+# Each run creates reports/prd_runs/run_YYYYMMDD_HHMMSS/
+# =========================
+reports/prd_runs/*
+!reports/prd_runs/.gitkeep
+
+# =========================
+# Temporary files
+# =========================
+*.tmp
+*.temp
+*.bak
+*.swp

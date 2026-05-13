@@ -1,0 +1,10 @@
+{"question": "What are the audit logging requirements?", "expected_source": "03_compliance_guide_en.txt", "category": "compliance", "relevant_keywords": ["audit logs", "timestamp", "user identity", "action type", "request ID"]}
+{"question": "How long should audit logs for privileged operations be retained?", "expected_source": "03_compliance_guide_en.txt", "category": "compliance", "relevant_keywords": ["audit logs", "privileged operations", "one year"]}
+{"question": "API Key 泄露后应该怎么处理？", "expected_source": "04_data_security_policy_cn.txt", "category": "security_cn", "relevant_keywords": ["API Key", "吊销", "新 Key", "24 小时", "安全事件报告"]}
+{"question": "日志中是否可以记录明文密码和完整 API Key？", "expected_source": "04_data_security_policy_cn.txt", "category": "security_cn", "relevant_keywords": ["日志", "明文密码", "完整 API Key", "脱敏"]}
+{"question": "What endpoints does the AKP Platform provide?", "expected_source": "05_akp_technical_specification_en.txt", "category": "technical_spec", "relevant_keywords": ["GET /health", "POST /chat", "endpoint"]}
+{"question": "What fields are included in the chat log data model?", "expected_source": "05_akp_technical_specification_en.txt", "category": "technical_spec", "relevant_keywords": ["request_id", "session_id", "retrieval mode", "cache hit"]}
+{"question": "员工病假需要提供什么材料？", "expected_source": "02_employee_handbook_cn.txt", "category": "hr_policy_cn", "relevant_keywords": ["病假", "医疗证明", "两个工作日", "HR"]}
+{"question": "远程办公时可以使用个人设备访问公司系统吗？", "expected_source": "02_employee_handbook_cn.txt", "category": "hr_policy_cn", "relevant_keywords": ["远程办公", "个人设备", "公共电脑", "安全网络连接"]}
+{"question": "AKP Platform 的核心模块有哪些？", "expected_source": "06_akp_architecture_document_cn.txt", "category": "architecture_cn", "relevant_keywords": ["文档入库模块", "切分模块", "检索模块", "生成模块", "观测模块"]}
+{"question": "系统在检索置信度不足时应该怎么处理？", "expected_source": "06_akp_architecture_document_cn.txt", "category": "architecture_cn", "relevant_keywords": ["检索置信度不足", "拒答", "NO_RETRIEVED_CONTEXT"]}
