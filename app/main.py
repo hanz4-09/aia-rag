@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.api.chat import router as chat_router
+from app.api.ui import router as ui_router
 
 
 app = FastAPI(
@@ -15,4 +16,5 @@ def health_check():
     return {"status": "ok"}
 
 
+app.include_router(ui_router)
 app.include_router(chat_router)

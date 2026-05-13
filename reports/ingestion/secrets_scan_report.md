@@ -6,7 +6,7 @@ Report Type: Ingestion Safety / Secrets Scan
 ## Summary
 
 - Root directory: data\raw
-- Scanned files: 8
+- Scanned files: 9
 - Skipped files: 2
 - Findings count: 0
 - Ignored findings count: 2

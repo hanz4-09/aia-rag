@@ -1,0 +1,155 @@
+# Security Operations Policy / 安全运营政策
+
+Document ID: SEC-OPS-2026-001
+Owner: Security Operations Team
+Version: 1.0
+Language: Chinese and English
+
+## 1. Purpose / 目的
+
+This document defines the internal security operations policy for API Key management, audit logging, incident reporting, and access review.
+
+本文档定义公司内部关于 API Key 管理、审计日志、安全事件上报和访问权限复核的安全运营要求。
+
+## 2. API Key Management / API Key 管理
+
+API Keys must be stored in approved secret management systems. They must not be stored in source code, shared documents, tickets, chat messages, screenshots, or plain text configuration files.
+
+API Key 必须存放在公司批准的密钥管理系统中。不得将 API Key 存放在源代码、共享文档、工单、聊天消息、截图或明文配置文件中。
+
+If an API Key is exposed or suspected to be exposed, the owner team must immediately revoke the old key, generate a new key, and update dependent services.
+
+如果 API Key 已经泄露或疑似泄露，负责团队必须立即吊销旧 key，生成新的 key，并更新依赖该 key 的服务。
+
+All confirmed API Key incidents must be reported to the Security Operations Team within 24 hours.
+
+所有确认的 API Key 泄露事件必须在 24 小时内报告给 Security Operations Team。
+
+## 3. Incident Reporting / 安全事件上报
+
+Security incidents must be reported through the official incident reporting channel.
+
+安全事件必须通过正式安全事件上报渠道提交。
+
+The incident report must include:
+
+- incident type
+- discovery time
+- affected system
+- affected owner team
+- immediate mitigation action
+- current status
+- follow-up owner
+
+安全事件报告必须包含：
+
+- 事件类型
+- 发现时间
+- 受影响系统
+- 受影响负责团队
+- 已采取的缓解措施
+- 当前状态
+- 后续负责人
+
+For API Key leakage, the incident type should be marked as "Credential Exposure".
+
+对于 API Key 泄露，事件类型应标记为 “Credential Exposure”。
+
+## 4. Audit Logging / 审计日志
+
+Systems handling confidential or restricted data must record audit logs for important operations.
+
+处理 confidential 或 restricted 数据的系统必须记录关键操作的审计日志。
+
+Important operations include:
+
+- login
+- logout
+- permission changes
+- data export
+- configuration updates
+- administrative operations
+- API Key creation
+- API Key revocation
+
+关键操作包括：
+
+- 登录
+- 登出
+- 权限变更
+- 数据导出
+- 配置更新
+- 管理员操作
+- API Key 创建
+- API Key 吊销
+
+Audit logs must include the following fields:
+
+- timestamp
+- user identity
+- action type
+- target resource
+- request ID
+- result status
+- source IP address
+
+审计日志必须包含以下字段：
+
+- 时间戳
+- 用户身份
+- 操作类型
+- 目标资源
+- 请求 ID
+- 结果状态
+- 来源 IP 地址
+
+Audit logs must be retained for at least one year.
+
+审计日志至少需要保留一年。
+
+## 5. Access Review / 权限复核
+
+Privileged access must be reviewed every quarter.
+
+高权限访问必须每季度复核一次。
+
+The access review must confirm:
+
+- whether the user still needs the permission
+- whether the permission level is appropriate
+- whether inactive users should be removed
+- whether temporary access has expired
+
+权限复核必须确认：
+
+- 用户是否仍然需要该权限
+- 权限级别是否合适
+- 是否需要移除非活跃用户
+- 临时权限是否已经过期
+
+If unnecessary privileged access is found, it must be removed within five working days.
+
+如果发现不再需要的高权限访问，必须在五个工作日内移除。
+
+## 6. Data Export Control / 数据导出控制
+
+Data export from systems containing restricted data must be logged and reviewed.
+
+从包含 restricted data 的系统中导出数据时，必须记录日志并接受审查。
+
+Large data exports must require manager approval.
+
+大规模数据导出必须获得 manager approval。
+
+## 7. Example Questions / 示例问题
+
+This document should support the following questions:
+
+1. What should the team do if an API Key is leaked?
+2. Within how many hours should an API Key incident be reported?
+3. Who should receive the API Key incident report?
+4. What fields must audit logs include?
+5. How long should audit logs be retained?
+6. How often should privileged access be reviewed?
+7. 高权限访问多久复核一次？
+8. API Key 泄露后应该通知谁？

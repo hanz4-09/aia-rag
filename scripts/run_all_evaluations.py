@@ -1,390 +1,462 @@
 import argparse
 import csv
+import json
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REPORT_DIR = PROJECT_ROOT / "reports" / "evaluations"
-
+REPORTS_DIR = PROJECT_ROOT / "reports"
+EVALUATIONS_DIR = REPORTS_DIR / "evaluations"
 TODAY = time.strftime("%Y-%m-%d")
-SUMMARY_CSV_PATH = REPORT_DIR / f"{TODAY}_all_evaluations_summary.csv"
-SUMMARY_MD_PATH = REPORT_DIR / f"{TODAY}_all_evaluations_summary.md"
+
+SUMMARY_CSV_PATH = EVALUATIONS_DIR / f"{TODAY}_all_evaluations_summary.csv"
+SUMMARY_MD_PATH = EVALUATIONS_DIR / f"{TODAY}_all_evaluations_summary.md"
 
 
-TASKS = [
+TASKS: List[Dict[str, Any]] = [
     {
-        "name": "operations_report",
-        "script": "scripts/generate_report.py",
+        "task": "operations_report",
         "mode": "core",
-        "report_glob": "operations_report.csv",
-        "description": "Generate operations report from structured JSONL logs.",
-        "key_metrics": [
-            "total_requests",
-            "p50_latency_ms",
-            "p95_latency_ms",
-            "avg_latency_ms",
-            "avg_total_tokens",
-            "reference_cost_per_1000_calls",
-            "estimated_billable_cost_per_1000_calls",
-            "answer_compliance_rate",
+        "description": "Generate operations report from runtime logs.",
+        "command": [sys.executable, "scripts/generate_report.py"],
+        "report_patterns": [
+            "reports/operations_report.csv",
         ],
     },
     {
-        "name": "answer_compliance",
-        "script": "scripts/evaluate_answers.py",
+        "task": "answer_compliance",
         "mode": "core",
-        "report_glob": "*answer_compliance_eval.csv",
-        "description": "Evaluate rule-based answer compliance.",
-        "key_metrics": [
-            "total_questions",
-            "answer_compliance_rate",
-            "rule_based_pass_rate",
-            "answer_not_empty_rate",
-            "expected_refusal_match_rate",
-            "refusal_reason_match_rate",
-            "source_hit_rate",
-            "forbidden_keywords_clean_rate",
-            "avg_expected_keywords_hit_rate",
+        "description": "Evaluate answer compliance against expected answers.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_answer_compliance.py"],
+            [sys.executable, "scripts/evaluate_answers.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_answer_compliance_eval.csv",
         ],
     },
     {
-        "name": "refusal_appropriateness",
-        "script": "scripts/evaluate_refusals.py",
+        "task": "refusal_appropriateness",
         "mode": "core",
-        "report_glob": "*refusal_appropriateness.csv",
-        "description": "Evaluate refusal decision and refusal reason correctness.",
-        "key_metrics": [
-            "total_questions",
-            "pass_rate",
-            "refusal_decision_match_rate",
-            "refusal_reason_match_rate",
-            "false_positive_rate",
-            "false_negative_rate",
+        "description": "Evaluate refusal behavior for unsafe or out-of-scope questions.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_refusal_appropriateness.py"],
+            [sys.executable, "scripts/evaluate_refusal.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_refusal_appropriateness.csv",
+            "reports/evaluations/*_refusal_appropriateness_eval.csv",
         ],
     },
     {
-        "name": "context_precision",
-        "script": "scripts/evaluate_context_precision.py",
+        "task": "context_precision",
         "mode": "core",
-        "report_glob": "*context_precision_eval.csv",
-        "description": "Evaluate context precision against expected sources and keywords.",
-        "key_metrics": [
-            "answerable_questions",
-            "evaluated_questions",
-            "avg_context_precision",
-            "avg_source_accuracy",
-            "avg_keyword_coverage",
-            "passing_count",
-            "passing_rate",
-            "prd_target",
-            "prd_pass",
+        "description": "Evaluate context precision and source accuracy.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_context_precision.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_context_precision_eval.csv",
         ],
     },
     {
-        "name": "faithfulness_llm_judge",
-        "script": "scripts/evaluate_faithfulness_llm_judge.py",
+        "task": "faithfulness_llm_judge",
         "mode": "core",
-        "report_glob": "*faithfulness_eval.csv",
-        "description": "Evaluate answer faithfulness using LLM-as-Judge.",
-        "key_metrics": [
-            "answerable_questions",
-            "evaluated_questions",
-            "avg_faithfulness",
-            "overall_statements",
-            "faithful_statements",
-            "passing_count",
-            "prd_target",
-            "prd_pass",
+        "description": "Evaluate faithfulness with LLM judge or rule-based support checks.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_faithfulness.py"],
+            [sys.executable, "scripts/evaluate_faithfulness_llm_judge.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_faithfulness_eval.csv",
         ],
     },
     {
-        "name": "style_consistency",
-        "script": "scripts/evaluate_style_consistency.py",
+        "task": "style_consistency",
         "mode": "core",
-        "report_glob": "*style_consistency_eval.csv",
-        "description": "Evaluate answer style consistency using LLM-as-Judge.",
-        "key_metrics": [
-            "total_answerable",
-            "total_evaluated",
-            "avg_style_consistency",
-            "avg_language_consistency",
-            "avg_format_consistency",
-            "avg_tone_professionalism",
-            "passing_count",
-            "passing_rate",
-            "prd_target",
-            "prd_pass",
+        "description": "Evaluate style and language consistency.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_style_consistency.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_style_consistency_eval.csv",
         ],
     },
     {
-        "name": "pii_redaction",
-        "script": "scripts/evaluate_pii_redaction.py",
+        "task": "pii_redaction",
         "mode": "core",
-        "report_glob": "*pii_redaction_eval.csv",
-        "description": "Evaluate basic PII redaction for logs and outputs.",
-        "key_metrics": [
-            "total_cases",
-            "passing_count",
-            "pass_rate",
-            "forbidden_clean_rate",
-            "placeholder_present_rate",
-            "prd_pass",
+        "description": "Evaluate PII redaction behavior.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_pii_redaction.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_pii_redaction_eval.csv",
         ],
     },
     {
-        "name": "multiturn_qa",
-        "script": "scripts/evaluate_multiturn.py",
+        "task": "multiturn_qa",
         "mode": "core",
-        "report_glob": "*multiturn_eval.csv",
-        "description": "Evaluate session-based multi-turn QA behavior.",
-        "key_metrics": [
-            "total_cases",
-            "passing_count",
-            "pass_rate",
-            "history_used_rate",
-            "source_hit_rate",
-            "avg_keyword_hit_rate",
-            "prd_pass",
+        "description": "Evaluate multi-turn QA and session history usage.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_multiturn.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_multiturn_eval.csv",
         ],
     },
     {
-        "name": "cache",
-        "script": "scripts/evaluate_cache.py",
+        "task": "cache",
         "mode": "core",
-        "report_glob": "*cache_eval.csv",
-        "description": "Evaluate cache miss/hit behavior using repeated requests.",
-        "key_metrics": [
-            "total_cases",
-            "passing_count",
-            "pass_rate",
-            "first_cache_miss_rate",
-            "second_cache_hit_rate",
-            "latency_improved_rate",
-            "avg_keyword_hit_rate",
-            "prd_pass",
+        "description": "Evaluate cache behavior.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_cache.py"],
+            [sys.executable, "scripts/evaluate_cache_behavior.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_cache_eval.csv",
         ],
     },
     {
-        "name": "pdf_ingestion",
-        "script": "scripts/evaluate_ingestion_pdf_handling.py",
+        "task": "pdf_ingestion",
         "mode": "core",
-        "report_glob": "*pdf_ingestion_eval.csv",
-        "description": "Evaluate text-based PDF loading, OCR extraction, and scanned PDF retrieval.",
-        "key_metrics": [
-            "total_cases",
-            "passing_count",
-            "pass_rate",
-            "pdf_files_checked",
-            "scanned_pdf_candidates",
-            "pdfs_with_ocr_performed",
-            "pdfs_with_ocr_succeeded",
-            "retrieval_hit_rate",
-            "loaded_documents",
-            "skipped_empty_documents",
-            "prd_pass",
+        "description": "Evaluate PDF and OCR ingestion behavior.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_ingestion_pdf_handling.py"],
+            [sys.executable, "scripts/evaluate_pdf_ingestion.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_pdf_ingestion_eval.csv",
         ],
     },
     {
-        "name": "advanced_memory",
-        "script": "scripts/evaluate_advanced_memory.py",
+        "task": "advanced_memory",
         "mode": "core",
-        "report_glob": "*advanced_memory_eval.csv",
-        "description": "Evaluate persistent memory and history-aware retrieval query rewriting.",
-        "key_metrics": [
-            "total_cases",
-            "passing_count",
-            "pass_rate",
-            "persistent_memory_pass_rate",
-            "query_rewrite_applied_rate",
-            "retrieval_query_resolution_rate",
-            "source_hit_rate",
-            "avg_keyword_hit_rate",
-            "prd_pass",
+        "description": "Evaluate persistent session memory and query rewrite.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_advanced_memory.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_advanced_memory_eval.csv",
         ],
     },
     {
-        "name": "latency",
-        "script": "scripts/evaluate_latency.py",
+        "task": "latency",
         "mode": "performance",
-        "report_glob": "*latency_eval.csv",
-        "description": "Evaluate sequential end-to-end latency.",
-        "key_metrics": [
-            "total_requests",
-            "successful_requests",
-            "failed_requests",
-            "success_rate",
-            "within_10s_rate",
-            "avg_latency_ms",
-            "p50_latency_ms",
-            "p90_latency_ms",
-            "p95_latency_ms",
-            "max_latency_ms",
-            "prd_pass",
+        "description": "Evaluate response latency against PRD target.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_latency.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_latency_eval.csv",
         ],
     },
     {
-        "name": "concurrency",
-        "script": "scripts/evaluate_concurrency.py",
+        "task": "concurrency",
         "mode": "performance",
-        "report_glob": "*concurrency_eval.csv",
-        "description": "Evaluate 5 concurrent requests on a single instance.",
-        "key_metrics": [
-            "total_requests",
-            "concurrency_level",
-            "successful_requests",
-            "failed_requests",
-            "success_rate",
-            "within_10s_rate",
-            "avg_latency_ms",
-            "p95_latency_ms",
-            "max_latency_ms",
-            "wall_clock_latency_ms",
-            "prd_pass",
+        "description": "Evaluate concurrent request behavior.",
+        "command_candidates": [
+            [sys.executable, "scripts/evaluate_concurrency.py"],
+        ],
+        "report_patterns": [
+            "reports/evaluations/*_concurrency_eval.csv",
         ],
     },
 ]
 
 
-def should_run_task(task: Dict[str, object], mode: str) -> bool:
-    if mode == "all":
-        return True
-    if mode == "core":
-        return task["mode"] == "core"
-    if mode == "performance":
-        return task["mode"] == "performance"
-    return False
+def resolve_command(task: Dict[str, Any]) -> Optional[List[str]]:
+    if "command" in task:
+        return task["command"]
+
+    for command in task.get("command_candidates", []):
+        if len(command) < 2:
+            continue
+
+        script_path = PROJECT_ROOT / command[1]
+        if script_path.exists():
+            return command
+
+    return None
 
 
-def run_script(script_path: str) -> Dict[str, object]:
-    absolute_script = PROJECT_ROOT / script_path
+def find_latest_report(task: Dict[str, Any]) -> Optional[Path]:
+    candidates: List[Path] = []
 
-    if not absolute_script.exists():
-        return {
-            "status": "missing",
-            "return_code": None,
-            "duration_seconds": 0,
-            "error": f"Script not found: {script_path}",
-        }
-
-    start = time.time()
-
-    process = subprocess.run(
-        [sys.executable, str(absolute_script)],
-        cwd=str(PROJECT_ROOT),
-        text=True,
-    )
-
-    duration_seconds = round(time.time() - start, 2)
-
-    return {
-        "status": "success" if process.returncode == 0 else "failed",
-        "return_code": process.returncode,
-        "duration_seconds": duration_seconds,
-        "error": "" if process.returncode == 0 else f"Process exited with code {process.returncode}",
-    }
-
-
-def find_latest_report(report_glob: str) -> Optional[Path]:
-    candidates = []
-
-    if report_glob == "operations_report.csv":
-        path = PROJECT_ROOT / "reports" / report_glob
-        return path if path.exists() else None
-
-    for path in REPORT_DIR.glob(report_glob):
-        if path.is_file():
-            candidates.append(path)
+    for pattern in task.get("report_patterns", []):
+        matched = list(PROJECT_ROOT.glob(pattern))
+        candidates.extend(path for path in matched if path.is_file())
 
     if not candidates:
         return None
 
-    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return candidates[0]
+    # Prefer today's report if available.
+    today_candidates = [
+        path for path in candidates if path.name.startswith(TODAY)
+    ]
+    if today_candidates:
+        return max(today_candidates, key=lambda path: path.stat().st_mtime)
+
+    return max(candidates, key=lambda path: path.stat().st_mtime)
 
 
-def read_summary_row(csv_path: Optional[Path]) -> Dict[str, str]:
-    if not csv_path or not csv_path.exists():
+def run_subprocess(command: List[str]) -> Dict[str, Any]:
+    start_time = time.time()
+
+    process = subprocess.Popen(
+        command,
+        cwd=PROJECT_ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+
+    output_lines: List[str] = []
+    assert process.stdout is not None
+
+    for line in process.stdout:
+        print(line, end="")
+        output_lines.append(line)
+
+    process.wait()
+
+    duration_sec = round(time.time() - start_time, 2)
+    combined_output = "".join(output_lines)
+
+    return {
+        "return_code": process.returncode,
+        "duration_sec": duration_sec,
+        "output_tail": combined_output[-4000:],
+        "pass": process.returncode == 0,
+    }
+
+
+def read_csv_summary(report_path: Optional[Path]) -> Dict[str, Any]:
+    if report_path is None or not report_path.exists():
         return {}
 
-    with open(csv_path, "r", encoding="utf-8", newline="") as file:
-        reader = csv.DictReader(file)
+    try:
+        with report_path.open("r", encoding="utf-8", newline="") as file:
+            reader = csv.DictReader(file)
+            rows = list(reader)
+    except Exception:
+        return {}
 
-        for row in reader:
-            # Most evaluation reports use row_type=summary.
-            # operations_report.csv has only one data row without row_type.
-            if row.get("row_type") == "summary":
-                return {k: v for k, v in row.items() if v not in [None, ""]}
+    if not rows:
+        return {}
 
-            if "row_type" not in row:
-                return {k: v for k, v in row.items() if v not in [None, ""]}
+    # Common format: row_type=summary.
+    for row in rows:
+        if row.get("row_type") == "summary":
+            return {
+                key: value
+                for key, value in row.items()
+                if key and value not in {None, ""}
+            }
 
-    return {}
+    # Operations report format: metric,value.
+    if set(rows[0].keys()) >= {"metric", "value"}:
+        return {
+            row.get("metric", ""): row.get("value", "")
+            for row in rows
+            if row.get("metric")
+        }
+
+    # Fallback: use first row.
+    return {
+        key: value
+        for key, value in rows[0].items()
+        if key and value not in {None, ""}
+    }
 
 
-def write_summary_csv(rows: List[Dict[str, object]]) -> None:
-    SUMMARY_CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
+def build_key_metrics(summary: Dict[str, Any]) -> str:
+    if not summary:
+        return ""
+
+    ignored_keys = {
+        "row_type",
+        "task",
+        "mode",
+        "description",
+        "report_path",
+        "error",
+    }
+
+    parts = []
+
+    for key, value in summary.items():
+        if key in ignored_keys:
+            continue
+
+        if value in {None, ""}:
+            continue
+
+        parts.append(f"{key}={value}")
+
+    return "; ".join(parts)
+
+
+def relative_path(path: Optional[Path]) -> str:
+    if path is None:
+        return ""
+
+    try:
+        return str(path.relative_to(PROJECT_ROOT))
+    except ValueError:
+        return str(path)
+
+
+def run_task(task: Dict[str, Any], skip_run: bool) -> Dict[str, Any]:
+    task_name = task["task"]
+    task_mode = task["mode"]
+
+    command = resolve_command(task)
+    duration_sec = 0.0
+    error = ""
+
+    if skip_run:
+        report_path = find_latest_report(task)
+
+        if report_path is None:
+            status = "missing"
+            error = "Report not found in skip-run mode."
+        else:
+            status = "skipped"
+
+        report_summary = read_csv_summary(report_path)
+        key_metrics = build_key_metrics(report_summary)
+
+        return {
+            "task": task_name,
+            "mode": task_mode,
+            "status": status,
+            "duration_sec": duration_sec,
+            "report_path": relative_path(report_path),
+            "description": task.get("description", ""),
+            "key_metrics": key_metrics,
+            "error": error,
+        }
+
+    if command is None:
+        report_path = find_latest_report(task)
+
+        return {
+            "task": task_name,
+            "mode": task_mode,
+            "status": "failed",
+            "duration_sec": duration_sec,
+            "report_path": relative_path(report_path),
+            "description": task.get("description", ""),
+            "key_metrics": "",
+            "error": "No runnable evaluation script found.",
+        }
+
+    run_result = run_subprocess(command)
+    duration_sec = run_result["duration_sec"]
+
+    report_path = find_latest_report(task)
+    report_summary = read_csv_summary(report_path)
+    key_metrics = build_key_metrics(report_summary)
+
+    if run_result["pass"]:
+        status = "success"
+    else:
+        status = "failed"
+        error = run_result["output_tail"]
+
+    return {
+        "task": task_name,
+        "mode": task_mode,
+        "status": status,
+        "duration_sec": duration_sec,
+        "report_path": relative_path(report_path),
+        "description": task.get("description", ""),
+        "key_metrics": key_metrics,
+        "error": error,
+    }
+
+
+def select_tasks(mode: str) -> List[Dict[str, Any]]:
+    if mode == "all":
+        return TASKS
+
+    if mode == "core":
+        return [task for task in TASKS if task["mode"] == "core"]
+
+    if mode == "performance":
+        return [task for task in TASKS if task["mode"] == "performance"]
+
+    raise ValueError(f"Unsupported mode: {mode}")
+
+
+def is_success_result(row: Dict[str, Any]) -> bool:
+    return row.get("status") == "success"
+
+
+def is_skipped_result(row: Dict[str, Any]) -> bool:
+    return row.get("status") == "skipped"
+
+
+def is_report_available_result(row: Dict[str, Any]) -> bool:
+    return row.get("status") in {"success", "skipped"} and bool(row.get("report_path"))
+
+
+def is_failed_or_missing_result(row: Dict[str, Any]) -> bool:
+    status = row.get("status")
+
+    if status in {"failed", "missing"}:
+        return True
+
+    if status == "skipped":
+        return not bool(row.get("report_path"))
+
+    return status != "success"
+
+
+def write_summary_csv(rows: List[Dict[str, Any]]) -> None:
+    EVALUATIONS_DIR.mkdir(parents=True, exist_ok=True)
 
     fieldnames = [
         "task",
         "mode",
-        "script",
         "status",
-        "return_code",
-        "duration_seconds",
+        "duration_sec",
         "report_path",
         "description",
         "key_metrics",
         "error",
     ]
 
-    with open(SUMMARY_CSV_PATH, "w", encoding="utf-8", newline="") as file:
+    with SUMMARY_CSV_PATH.open("w", encoding="utf-8", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
 
         for row in rows:
-            writer.writerow({
-                "task": row.get("task", ""),
-                "mode": row.get("mode", ""),
-                "script": row.get("script", ""),
-                "status": row.get("status", ""),
-                "return_code": row.get("return_code", ""),
-                "duration_seconds": row.get("duration_seconds", ""),
-                "report_path": row.get("report_path", ""),
-                "description": row.get("description", ""),
-                "key_metrics": row.get("key_metrics", ""),
-                "error": row.get("error", ""),
-            })
+            writer.writerow(row)
 
 
-def write_summary_markdown(rows: List[Dict[str, object]], mode: str) -> None:
-    successful_tasks = sum(1 for row in rows if row.get("status") == "success")
-    skipped_tasks = sum(1 for row in rows if row.get("status") == "skipped")
+def write_summary_markdown(rows: List[Dict[str, Any]], mode: str) -> None:
+    successful_tasks = sum(1 for row in rows if is_success_result(row))
+    skipped_tasks = sum(1 for row in rows if is_skipped_result(row))
     report_available_tasks = sum(
-        1
-        for row in rows
-        if row.get("status") in {"success", "skipped"}
-        and bool(row.get("report_path"))
+        1 for row in rows if is_report_available_result(row)
     )
     failed_or_missing_tasks = sum(
-        1
-        for row in rows
-        if row.get("status") in {"failed", "missing"}
-        or (
-            row.get("status") == "skipped"
-            and not bool(row.get("report_path"))
-        )
+        1 for row in rows if is_failed_or_missing_result(row)
     )
     total_tasks = len(rows)
 
     lines = [
         "# All Evaluations Summary",
         "",
-        f"Date: {TODAY}  ",
-        "Project: AIA RAG Case Study Service  ",
-        f"Mode: `{mode}`  ",
+        f"Date: {TODAY}",
+        "Project: AIA RAG Case Study Service",
+        f"Mode: `{mode}`",
         "",
         "---",
         "",
@@ -405,119 +477,131 @@ def write_summary_markdown(rows: List[Dict[str, object]], mode: str) -> None:
     ]
 
     for row in rows:
-        report_path = row.get("report_path") or ""
-        display_report = report_path.replace(str(PROJECT_ROOT) + "\\", "").replace(str(PROJECT_ROOT) + "/", "")
         lines.append(
-            f"| {row.get('task')} | {row.get('status')} | {row.get('duration_seconds')} | "
-            f"`{display_report}` | {row.get('key_metrics')} |"
+            f"| {row['task']} | {row['status']} | {row['duration_sec']} | "
+            f"`{row['report_path']}` | {row['key_metrics']} |"
         )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## 3. Notes",
-        "",
-        "- This script orchestrates existing evaluation scripts.",
-        "- It does not replace the individual detailed evaluation reports.",
-        "- LLM-based evaluations may consume model quota.",
-        "- Performance evaluations may be skipped by running `--mode core`.",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 3. Notes",
+            "",
+            "- This script orchestrates existing evaluation scripts.",
+            "- It does not replace the individual detailed evaluation reports.",
+            "- LLM-based evaluations may consume model quota.",
+            "- Performance evaluations may take longer than rule-based checks.",
+            "- `--skip-run` summarizes existing reports without rerunning evaluations.",
+            "",
+        ]
+    )
 
-    with open(SUMMARY_MD_PATH, "w", encoding="utf-8") as file:
-        file.write("\n".join(lines))
+    SUMMARY_MD_PATH.write_text("\n".join(lines), encoding="utf-8")
+
+
+def print_task_progress_header() -> None:
+    print()
+    print("=" * 80)
+    print("CORE EVALUATION TASKS")
+    print("=" * 80)
+
+
+def print_task_progress_footer() -> None:
+    print()
+    print("=" * 80)
+    print("CORE EVALUATION TASKS COMPLETED")
+    print("=" * 80)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run AIA RAG evaluation suite.")
+    parser = argparse.ArgumentParser(
+        description="Run or summarize core PRD evaluation tasks."
+    )
     parser.add_argument(
         "--mode",
         choices=["core", "performance", "all"],
-        default="all",
-        help="Which evaluation group to run.",
+        default="core",
+        help="Evaluation mode to run or summarize.",
     )
     parser.add_argument(
         "--skip-run",
         action="store_true",
-        help="Do not execute scripts; only aggregate latest existing CSV reports.",
-    )
-    parser.add_argument(
-        "--fail-fast",
-        action="store_true",
-        help="Stop after the first failed task.",
+        help="Do not run evaluation scripts; summarize existing reports only.",
     )
 
     args = parser.parse_args()
 
-    selected_tasks = [task for task in TASKS if should_run_task(task, args.mode)]
+    selected_tasks = select_tasks(args.mode)
+    total_tasks = len(selected_tasks)
+    rows: List[Dict[str, Any]] = []
 
-    print(f"Running evaluation suite. mode={args.mode}, skip_run={args.skip_run}")
-    print(f"Selected tasks: {len(selected_tasks)}")
-    print()
+    print_task_progress_header()
 
-    rows = []
+    for index, task in enumerate(selected_tasks, start=1):
+        task_name = task["task"]
 
-    for task in selected_tasks:
-        print("=" * 100)
-        print(f"Task: {task['name']}")
-        print(f"Script: {task['script']}")
-        print("=" * 100)
-
-        if args.skip_run:
-            run_result = {
-                "status": "skipped",
-                "return_code": None,
-                "duration_seconds": 0,
-                "error": "",
-            }
-        else:
-            run_result = run_script(task["script"])
-
-        latest_report = find_latest_report(task["report_glob"])
-        summary = read_summary_row(latest_report)
-
-        key_metrics = []
-        for metric in task["key_metrics"]:
-            if metric in summary:
-                key_metrics.append(f"{metric}={summary[metric]}")
-
-        row = {
-            "task": task["name"],
-            "mode": task["mode"],
-            "script": task["script"],
-            "status": run_result["status"],
-            "return_code": run_result["return_code"],
-            "duration_seconds": run_result["duration_seconds"],
-            "report_path": str(latest_report) if latest_report else "",
-            "description": task["description"],
-            "key_metrics": "; ".join(key_metrics),
-            "error": run_result["error"],
-        }
-
-        rows.append(row)
-
-        print(f"Status: {row['status']}")
-        print(f"Duration seconds: {row['duration_seconds']}")
-        print(f"Report: {row['report_path']}")
-        print(f"Key metrics: {row['key_metrics']}")
-        if row["error"]:
-            print(f"Error: {row['error']}")
-
-        if args.fail_fast and row["status"] not in ["success", "skipped"]:
-            print("Fail-fast enabled. Stopping.")
-            break
+        action = (
+            "checking existing report"
+            if args.skip_run
+            else "running evaluation"
+        )
 
         print()
+        print(f"[{index}/{total_tasks}] {task_name} ... {action}")
+
+        task_start = time.time()
+        result = run_task(task, skip_run=args.skip_run)
+        duration_sec = round(time.time() - task_start, 2)
+
+        # Keep the duration measured by the task itself when available.
+        if not result.get("duration_sec"):
+            result["duration_sec"] = duration_sec
+
+        status = result.get("status", "unknown")
+
+        if status in {"success", "skipped"}:
+            icon = "✅"
+        else:
+            icon = "❌"
+
+        print(
+            f"[{index}/{total_tasks}] {task_name} ... "
+            f"{icon} {status}, duration={result['duration_sec']}s"
+        )
+
+        if result.get("report_path"):
+            print(f"  report: {result['report_path']}")
+
+        if result.get("error"):
+            print(f"  error: {result['error']}")
+
+        rows.append(result)
+
+    print_task_progress_footer()
 
     write_summary_csv(rows)
-    write_summary_markdown(rows, args.mode)
+    write_summary_markdown(rows, mode=args.mode)
 
-    print("=" * 100)
-    print("Evaluation suite completed.")
-    print(f"Summary CSV: {SUMMARY_CSV_PATH}")
-    print(f"Summary Markdown: {SUMMARY_MD_PATH}")
-    print("=" * 100)
+    failed_or_missing_tasks = sum(
+        1 for row in rows if is_failed_or_missing_result(row)
+    )
+
+    print()
+    print("=" * 80)
+    print("ALL EVALUATIONS SUMMARY")
+    print("=" * 80)
+    print(f"  Mode:                         {args.mode}")
+    print(f"  Total tasks:                  {len(rows)}")
+    print(f"  Tasks with available reports: {sum(1 for row in rows if is_report_available_result(row))}")
+    print(f"  Failed or missing tasks:      {failed_or_missing_tasks}")
+    print(f"  CSV summary:                  {SUMMARY_CSV_PATH}")
+    print(f"  Markdown summary:             {SUMMARY_MD_PATH}")
+    print("=" * 80)
+
+    if failed_or_missing_tasks > 0:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
