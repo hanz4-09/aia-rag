@@ -1,10 +1,7 @@
 import argparse
 import csv
 import json
-<<<<<<< HEAD
 import os
-=======
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 import shutil
 import subprocess
 import sys
@@ -24,6 +21,19 @@ CORE_SUMMARY_MD = EVALUATIONS_DIR / f"{TODAY}_all_evaluations_summary.md"
 OPERATIONS_REPORT_CSV = REPORTS_DIR / "operations_report.csv"
 
 
+def safe_print(message: str = "", end: str = "\n", flush: bool = True) -> None:
+    """
+    Print safely on Windows terminals that may use GBK encoding.
+    """
+    try:
+        print(message, end=end, flush=flush)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or "utf-8"
+        sys.stdout.buffer.write((message + end).encode(encoding, errors="replace"))
+        if flush:
+            sys.stdout.flush()
+
+
 def run_command(command: List[str], description: str) -> Dict[str, Any]:
     """
     Run a child command and stream its output in real time.
@@ -34,29 +44,26 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
     """
     start_time = time.time()
 
-    print()
-    print("-" * 80)
-    print(f"Running: {description}")
-    print(f"Command: {' '.join(command)}")
-    print("-" * 80)
+    safe_print()
+    safe_print("-" * 80)
+    safe_print(f"Running: {description}")
+    safe_print(f"Command: {' '.join(command)}")
+    safe_print("-" * 80)
 
-<<<<<<< HEAD
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
 
-=======
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     process = subprocess.Popen(
         command,
         cwd=PROJECT_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1,
-<<<<<<< HEAD
         env=env,
-=======
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     )
 
     output_lines: List[str] = []
@@ -64,7 +71,7 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
     assert process.stdout is not None
 
     for line in process.stdout:
-        print(line, end="")
+        safe_print(line, end="")
         output_lines.append(line)
 
     process.wait()
@@ -72,14 +79,14 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
     duration_ms = int((time.time() - start_time) * 1000)
     combined_output = "".join(output_lines)
 
-    print()
-    print("-" * 80)
-    print(
+    safe_print()
+    safe_print("-" * 80)
+    safe_print(
         f"Finished: {description} | "
         f"return_code={process.returncode} | "
         f"duration_ms={duration_ms}"
     )
-    print("-" * 80)
+    safe_print("-" * 80)
 
     return {
         "description": description,
@@ -352,6 +359,17 @@ def copy_if_exists(source: Path, destination_dir: Path) -> None:
         shutil.copy2(source, destination_dir / source.name)
 
 
+def write_failure_bundle(
+    run_dir: Path,
+    command_results: List[Dict[str, Any]],
+) -> None:
+    summary = build_summary(run_dir, command_results, [])
+    write_summary_json(run_dir, summary)
+    write_full_results_json(run_dir, [], command_results)
+    write_ops_report_md(run_dir, summary, [])
+    write_ops_report_csv(run_dir, summary)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
@@ -375,41 +393,30 @@ def main() -> None:
     run_dir = create_run_dir()
     command_results: List[Dict[str, Any]] = []
 
-    print("=" * 80)
-    print("FULL PRD EVALUATION")
-    print("=" * 80)
-    print(f"Run directory: {run_dir}")
+    safe_print("=" * 80)
+    safe_print("FULL PRD EVALUATION")
+    safe_print("=" * 80)
+    safe_print(f"Run directory: {run_dir}")
 
     if args.with_ingest:
-        print("\n[1] Running ingestion...")
+        safe_print("\n[1] Running ingestion...")
         result = run_command(
-<<<<<<< HEAD
             [sys.executable, "-u", "scripts/ingest.py"],
-=======
-            [sys.executable, "scripts/ingest.py"],
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
             "Run document ingestion",
         )
         command_results.append(result)
-        print(f"  pass={result['pass']}, return_code={result['return_code']}")
+        safe_print(f"  pass={result['pass']}, return_code={result['return_code']}")
 
         if not result["pass"]:
-            summary = build_summary(run_dir, command_results, [])
-            write_summary_json(run_dir, summary)
-            write_full_results_json(run_dir, [], command_results)
-            write_ops_report_md(run_dir, summary, [])
-            write_ops_report_csv(run_dir, summary)
-            print("Ingestion failed. Stop.")
+            write_failure_bundle(run_dir, command_results)
+            safe_print("Ingestion failed. Stop.")
             sys.exit(1)
 
-    print("\n[2] Generating core evaluation summary...")
+    safe_print("\n[2] Generating core evaluation summary...")
 
     eval_command = [
         sys.executable,
-<<<<<<< HEAD
         "-u",
-=======
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         "scripts/run_all_evaluations.py",
         "--mode",
         "all",
@@ -423,30 +430,22 @@ def main() -> None:
         "Generate core PRD evaluation summary",
     )
     command_results.append(result)
-    print(f"  pass={result['pass']}, return_code={result['return_code']}")
+    safe_print(f"  pass={result['pass']}, return_code={result['return_code']}")
 
     if not result["pass"]:
-        summary = build_summary(run_dir, command_results, [])
-        write_summary_json(run_dir, summary)
-        write_full_results_json(run_dir, [], command_results)
-        write_ops_report_md(run_dir, summary, [])
-        write_ops_report_csv(run_dir, summary)
-        print("Core evaluation summary failed. Stop.")
+        write_failure_bundle(run_dir, command_results)
+        safe_print("Core evaluation summary failed. Stop.")
         sys.exit(1)
 
-    print("\n[3] Generating operations report...")
+    safe_print("\n[3] Generating operations report...")
     result = run_command(
-<<<<<<< HEAD
         [sys.executable, "-u", "scripts/generate_report.py"],
-=======
-        [sys.executable, "scripts/generate_report.py"],
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         "Generate operations report from JSONL logs",
     )
     command_results.append(result)
-    print(f"  pass={result['pass']}, return_code={result['return_code']}")
+    safe_print(f"  pass={result['pass']}, return_code={result['return_code']}")
 
-    print("\n[4] Collecting reports...")
+    safe_print("\n[4] Collecting reports...")
 
     summary_rows = read_core_summary_rows(CORE_SUMMARY_CSV)
     metrics_rows = build_full_metrics(summary_rows)
@@ -462,30 +461,26 @@ def main() -> None:
     copy_if_exists(CORE_SUMMARY_MD, run_dir)
     copy_if_exists(OPERATIONS_REPORT_CSV, run_dir)
 
-    print("\nGenerated files:")
-    print(f"  {full_metrics_path}")
-    print(f"  {full_results_path}")
-    print(f"  {summary_json_path}")
-    print(f"  {ops_md_path}")
-    print(f"  {ops_csv_path}")
+    safe_print("\nGenerated files:")
+    safe_print(f"  {full_metrics_path}")
+    safe_print(f"  {full_results_path}")
+    safe_print(f"  {summary_json_path}")
+    safe_print(f"  {ops_md_path}")
+    safe_print(f"  {ops_csv_path}")
 
-    print()
-    print("=" * 80)
-    print("FULL PRD EVALUATION SUMMARY")
-    print("=" * 80)
-    print(f"  Run directory:                  {run_dir}")
-    print(f"  Total core tasks:               {summary['total_core_tasks']}")
-    print(f"  Tasks with available reports:   {summary['tasks_with_available_reports']}")
-    print(f"  Failed or missing tasks:        {summary['failed_or_missing_tasks']}")
-    print(
+    safe_print()
+    safe_print("=" * 80)
+    safe_print("FULL PRD EVALUATION SUMMARY")
+    safe_print("=" * 80)
+    safe_print(f"  Run directory:                  {run_dir}")
+    safe_print(f"  Total core tasks:               {summary['total_core_tasks']}")
+    safe_print(f"  Tasks with available reports:   {summary['tasks_with_available_reports']}")
+    safe_print(f"  Failed or missing tasks:        {summary['failed_or_missing_tasks']}")
+    safe_print(
         f"  Overall pass:                   "
-<<<<<<< HEAD
         f"{'PASS' if summary['overall_pass'] else 'FAIL'}"
-=======
-        f"{'✅ PASS' if summary['overall_pass'] else '❌ FAIL'}"
->>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     )
-    print("=" * 80)
+    safe_print("=" * 80)
 
     if not summary["overall_pass"]:
         sys.exit(1)

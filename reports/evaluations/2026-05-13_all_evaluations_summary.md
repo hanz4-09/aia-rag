@@ -1,18 +1,18 @@
 # All Evaluations Summary
 
-Date: 2026-05-13  
-Project: AIA RAG Case Study Service  
-Mode: `all`  
+Date: 2026-05-13
+Project: AIA RAG Case Study Service
+Mode: `all`
 
 ---
 
 ## 1. Summary
 
 - Total tasks: 13
-- Successful tasks: 4
+- Successful tasks: 13
 - Skipped tasks: 0
-- Tasks with available reports: 4
-- Failed or missing tasks: 9
+- Tasks with available reports: 13
+- Failed or missing tasks: 0
 
 ---
 
@@ -20,19 +20,19 @@ Mode: `all`
 
 | Task | Status | Duration sec | Report | Key Metrics |
 |---|---:|---:|---|---|
-| operations_report | success | 0.43 | `reports\operations_report.csv` | total_requests=50; p50_latency_ms=751; p95_latency_ms=7908; avg_latency_ms=2373.78; avg_total_tokens=1005.47; reference_cost_per_1000_calls=0.39188; estimated_billable_cost_per_1000_calls=0.0; answer_compliance_rate=1.0 |
-| answer_compliance | success | 152.59 | `reports\evaluations\2026-05-11_answer_compliance_eval.csv` | total_questions=30; answer_compliance_rate=1.0; rule_based_pass_rate=1.0; answer_not_empty_rate=1.0; expected_refusal_match_rate=1.0; refusal_reason_match_rate=1.0; source_hit_rate=1.0; forbidden_keywords_clean_rate=1.0; avg_expected_keywords_hit_rate=0.9417 |
-| refusal_appropriateness | success | 107.84 | `reports\evaluations\2026-05-09_refusal_appropriateness.csv` | total_questions=14; pass_rate=1.0; refusal_decision_match_rate=1.0; refusal_reason_match_rate=1.0; false_positive_rate=0.0; false_negative_rate=0.0 |
-| context_precision | failed | 60.53 | `reports\evaluations\2026-05-12_context_precision_eval.csv` | avg_context_precision=0.9807; avg_source_accuracy=1.0; avg_keyword_coverage=0.9613; passing_count=28; passing_rate=1.0; prd_target=0.7; prd_pass=True |
-| faithfulness_llm_judge | failed | 82.88 | `reports\evaluations\2026-05-11_faithfulness_eval.csv` | avg_faithfulness=1.0; overall_statements=76; passing_count=28; prd_target=0.85; prd_pass=True |
-| style_consistency | failed | 91.31 | `reports\evaluations\2026-05-11_style_consistency_eval.csv` | total_answerable=28; total_evaluated=28; avg_style_consistency=0.994; avg_language_consistency=1.0; avg_format_consistency=0.9821; avg_tone_professionalism=1.0; passing_count=27; passing_rate=0.9643; prd_target=0.85; prd_pass=True |
-| pii_redaction | failed | 0.96 | `reports\evaluations\2026-05-12_pii_redaction_eval.csv` | total_cases=13; passing_count=13; pass_rate=1.0; forbidden_clean_rate=1.0; placeholder_present_rate=1.0; prd_pass=True |
-| multiturn_qa | failed | 102.44 | `reports\evaluations\2026-05-12_multiturn_eval.csv` | total_cases=6; passing_count=6; pass_rate=1.0; history_used_rate=1.0; source_hit_rate=1.0; avg_keyword_hit_rate=1.0; prd_pass=True |
-| cache | failed | 79.7 | `reports\evaluations\2026-05-11_cache_eval.csv` | total_cases=2; passing_count=2; pass_rate=1.0; first_cache_miss_rate=1.0; second_cache_hit_rate=1.0; latency_improved_rate=1.0; avg_keyword_hit_rate=1.0; prd_pass=True |
-| pdf_ingestion | failed | 52.19 | `reports\evaluations\2026-05-12_pdf_ingestion_eval.csv` | total_cases=4; passing_count=4; pass_rate=1.0; pdf_files_checked=2; scanned_pdf_candidates=1; pdfs_with_ocr_performed=1; pdfs_with_ocr_succeeded=1; retrieval_hit_rate=1.0; loaded_documents=10; skipped_empty_documents=0; prd_pass=True |
-| advanced_memory | failed | 76.82 | `reports\evaluations\2026-05-12_advanced_memory_eval.csv` | total_cases=2; passing_count=2; pass_rate=1.0; persistent_memory_pass_rate=1.0; query_rewrite_applied_rate=1.0; retrieval_query_resolution_rate=1.0; source_hit_rate=1.0; avg_keyword_hit_rate=0.8334; prd_pass=True |
-| latency | success | 160.52 | `reports\evaluations\2026-05-11_latency_eval.csv` | total_requests=30; successful_requests=30; failed_requests=0; success_rate=1.0; within_10s_rate=1.0; avg_latency_ms=3038.27; p50_latency_ms=2507.5; p90_latency_ms=5726.0; p95_latency_ms=7273.85; max_latency_ms=9817; prd_pass=True |
-| concurrency | failed | 114.32 | `reports\evaluations\2026-05-11_concurrency_eval.csv` | total_requests=5; concurrency_level=5; successful_requests=5; failed_requests=0; success_rate=1.0; within_10s_rate=1.0; avg_latency_ms=3157.6; p95_latency_ms=5915.6; max_latency_ms=6373; wall_clock_latency_ms=6377; prd_pass=True |
+| operations_report | success | 0.1 | `reports\operations_report.csv` | total_requests=62; p50_latency_ms=1958; p95_latency_ms=8221; avg_latency_ms=2794.87; avg_retrieval_latency_ms=129.81; avg_generation_latency_ms=2663.74; cache_hit_rate=0.2742; refusal_rate=0.129; llm_request_count=61; extractive_request_count=1; generator_types=extractive|llm; model_names=qwen-max; total_input_tokens=49641; total_output_tokens=3727; total_tokens=53368; avg_input_tokens=902.56; avg_output_tokens=67.76; avg_total_tokens=970.33; cost_enabled=True; currency=USD; input_price_per_1m_tokens=0.4; output_price_per_1m_tokens=1.2; free_quota_enabled=True; reference_total_cost=0.024329; reference_cost_per_request=0.000392; reference_cost_per_1000_calls=0.3924; estimated_billable_total_cost=0.0; estimated_billable_cost_per_1000_calls=0.0; answer_compliance_rate=1.0; answer_compliance_report=C:\Users\dx\OneDrive\aia-rag\reports\evaluations\2026-05-11_answer_compliance_eval.csv |
+| answer_compliance | success | 99.75 | `reports\evaluations\2026-05-11_answer_compliance_eval.csv` | total_questions=30; answer_compliance_rate=0.9667; rule_based_pass_rate=0.9667; answer_not_empty_rate=1.0; expected_refusal_match_rate=0.9667; refusal_reason_match_rate=0.9667; source_hit_rate=1.0; forbidden_keywords_clean_rate=1.0; avg_expected_keywords_hit_rate=0.9083; avg_total_latency_ms=2780.77; avg_generation_latency_ms=2732.4; avg_total_tokens=888.31 |
+| refusal_appropriateness | success | 62.2 | `reports\evaluations\2026-05-09_refusal_appropriateness.csv` | total_questions=14; pass_rate=1.0; refusal_decision_match_rate=1.0; refusal_reason_match_rate=1.0; false_positive_rate=0.0; false_negative_rate=0.0; answer_allowed_rate=0.4286; actual_refusal_rate=0.5714; avg_total_latency_ms=3157.14; avg_total_tokens=910.67 |
+| context_precision | success | 16.63 | `reports\evaluations\2026-05-13_context_precision_eval.csv` | total_answerable=28; total_evaluated=28; avg_context_precision=0.9807; avg_source_accuracy=1.0; avg_keyword_coverage=0.9613; passing_count=28; passing_rate=1.0; prd_target=0.7; prd_pass=True |
+| faithfulness_llm_judge | success | 164.24 | `reports\evaluations\2026-05-13_faithfulness_eval.csv` | total_answerable=28; total_evaluated=27; avg_faithfulness=1.0; overall_statements=67; overall_faithful=67; overall_faithfulness_rate=1.0; passing_count=27; passing_rate=1.0; prd_target=0.85; prd_pass=True |
+| style_consistency | success | 189.66 | `reports\evaluations\2026-05-13_style_consistency_eval.csv` | total_answerable=28; total_evaluated=27; avg_style_consistency=1.0; avg_language_consistency=1.0; avg_format_consistency=1.0; avg_tone_professionalism=1.0; passing_count=27; passing_rate=1.0; prd_target=0.85; prd_pass=True |
+| pii_redaction | success | 0.09 | `reports\evaluations\2026-05-13_pii_redaction_eval.csv` | total_cases=13; passing_count=13; pass_rate=1.0; true_positive_cases=7; true_positive_passing=7; true_positive_pass_rate=1.0; false_positive_cases=6; false_positive_passing=6; false_positive_clean_rate=1.0; forbidden_clean_count=13; forbidden_clean_rate=1.0; placeholder_present_count=7; placeholder_present_rate=1.0; unexpected_placeholder_clean_count=6; unexpected_placeholder_clean_rate=1.0; prd_pass=True |
+| multiturn_qa | success | 51.62 | `reports\evaluations\2026-05-13_multiturn_eval.csv` | total_cases=6; passing_count=6; pass_rate=1.0; history_used_count=6; history_used_rate=1.0; source_hit_count=6; source_hit_rate=1.0; avg_keyword_hit_rate=1.0; prd_pass=True |
+| cache | success | 36.38 | `reports\evaluations\2026-05-13_cache_eval.csv` | total_cases=2; passing_count=0; pass_rate=0.0; first_cache_miss_count=2; first_cache_miss_rate=1.0; second_cache_hit_count=0; second_cache_hit_rate=0.0; latency_improved_count=0; latency_improved_rate=0.0; avg_keyword_hit_rate=1.0; prd_pass=False |
+| pdf_ingestion | success | 42.83 | `reports\evaluations\2026-05-13_pdf_ingestion_eval.csv` | total_cases=4; passing_count=1; pass_rate=0.25; pdf_files_checked=2; scanned_pdf_candidates=1; pdfs_with_ocr_performed=0; pdfs_with_ocr_succeeded=0; retrieval_hit_count=4; retrieval_hit_rate=1.0; loaded_documents=10; skipped_empty_documents=1; prd_pass=False |
+| advanced_memory | success | 30.05 | `reports\evaluations\2026-05-13_advanced_memory_eval.csv` | total_cases=2; passing_count=2; pass_rate=1.0; persistent_memory_pass_count=2; persistent_memory_pass_rate=1.0; query_rewrite_applied_count=2; query_rewrite_applied_rate=1.0; retrieval_query_resolution_count=2; retrieval_query_resolution_rate=1.0; source_hit_count=2; source_hit_rate=1.0; avg_keyword_hit_rate=0.8334; prd_pass=True |
+| latency | success | 117.64 | `reports\evaluations\2026-05-11_latency_eval.csv` | total_requests=30; successful_requests=30; failed_requests=0; success_rate=1.0; within_10s_count=29; within_10s_rate=0.9667; avg_latency_ms=3318.07; p50_latency_ms=2561.5; p90_latency_ms=5618.8; p95_latency_ms=6717.75; max_latency_ms=10087; avg_retrieval_latency_ms=46.97; avg_generation_latency_ms=3270.47; prd_latency_threshold_ms=10000; prd_required_within_threshold_rate=0.9; prd_pass=True |
+| concurrency | success | 57.62 | `reports\evaluations\2026-05-11_concurrency_eval.csv` | total_requests=5; concurrency_level=5; successful_requests=5; failed_requests=0; success_rate=1.0; within_10s_count=5; within_10s_rate=1.0; avg_latency_ms=3684.4; p50_latency_ms=3996.0; p90_latency_ms=5403.4; p95_latency_ms=5423.2; max_latency_ms=5443; wall_clock_latency_ms=5448; prebuild_latency_ms=46574; avg_retrieval_latency_ms=528.6; avg_generation_latency_ms=3154.4; prd_required_success_rate=1.0; prd_required_within_10s_rate=0.9; prd_pass=True |
 
 ---
 
@@ -41,4 +41,6 @@ Mode: `all`
 - This script orchestrates existing evaluation scripts.
 - It does not replace the individual detailed evaluation reports.
 - LLM-based evaluations may consume model quota.
-- Performance evaluations may be skipped by running `--mode core`.
+- Performance evaluations may take longer than rule-based checks.
+- `--skip-run` summarizes existing reports without rerunning evaluations.
+- If a task has no runnable script but has an existing report, the report is reused and the task is marked as skipped.
