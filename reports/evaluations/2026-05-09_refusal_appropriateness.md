@@ -71,8 +71,8 @@ False negative means:
 | False Negative Rate | 0.0 |
 | Answer Allowed Rate | 0.4286 |
 | Actual Refusal Rate | 0.5714 |
-| Avg Total Latency ms | 1560.79 |
-| Avg Total Tokens | 1019.33 |
+| Avg Total Latency ms | 2450.36 |
+| Avg Total Tokens | 1016.33 |
 
 ---
 

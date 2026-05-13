@@ -29,8 +29,8 @@ The evaluator checks cache_hit values from structured JSONL logs.
 - Question: What are the audit logging requirements?
 - First cache hit: False
 - Second cache hit: False
-- First measured latency ms: 2841
-- Second measured latency ms: 4440
+- First measured latency ms: 3751
+- Second measured latency ms: 4971
 - Latency improved: False
 - Keyword hit rate: 1.0
 - Pass: False
@@ -40,8 +40,8 @@ The evaluator checks cache_hit values from structured JSONL logs.
 - Question: API Key 泄露后应该怎么处理？
 - First cache hit: False
 - Second cache hit: False
-- First measured latency ms: 6834
-- Second measured latency ms: 8342
+- First measured latency ms: 2923
+- Second measured latency ms: 7707
 - Latency improved: False
 - Keyword hit rate: 1.0
 - Pass: False

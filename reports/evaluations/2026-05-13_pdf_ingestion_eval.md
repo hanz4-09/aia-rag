@@ -7,16 +7,16 @@ Evaluation Type: PDF Ingestion / OCR Extraction / Retrieval
 ## Summary
 
 - Total cases: 4
-- Passing cases: 4
-- Pass rate: 1.0
+- Passing cases: 1
+- Pass rate: 0.25
 - PDF files checked: 2
 - Scanned PDF candidates: 1
-- PDFs with OCR performed: 1
-- PDFs with OCR succeeded: 1
+- PDFs with OCR performed: 0
+- PDFs with OCR succeeded: 0
 - Retrieval hit rate: 1.0
 - Loaded documents: 10
-- Skipped empty documents: 0
-- PRD pass: True
+- Skipped empty documents: 1
+- PRD pass: False
 
 ## Method
 
@@ -57,54 +57,54 @@ It verifies that:
 - Filename: 99_scanned_pdf_detection_test.pdf
 - Found: True
 - Expected status: loaded_with_ocr
-- Actual status: loaded_with_ocr
+- Actual status: skipped_no_extractable_text
 - Scanned PDF candidate: True
-- OCR performed: True
-- OCR succeeded: True
+- OCR performed: False
+- OCR succeeded: False
 - Pages with text: 0
 - Pages without text: 1
-- Extracted characters: 131
+- Extracted characters: 0
 - Retrieval hit: True
 - Retrieval rank: 1
 - Keyword hit rate: 1.0
 - Missing keywords: None
 - Retrieved text preview: Scanned OCR test document API Key incidents must be reported within 24 hours  Audit logs for privileged operations are retained for
-- Pass: True
+- Pass: False
 
 ### ocr_api_key_reporting_window_content
 
 - Filename: 99_scanned_pdf_detection_test.pdf
 - Found: True
 - Expected status: loaded_with_ocr
-- Actual status: loaded_with_ocr
+- Actual status: skipped_no_extractable_text
 - Scanned PDF candidate: True
-- OCR performed: True
-- OCR succeeded: True
+- OCR performed: False
+- OCR succeeded: False
 - Pages with text: 0
 - Pages without text: 1
-- Extracted characters: 131
+- Extracted characters: 0
 - Retrieval hit: True
 - Retrieval rank: 1
 - Keyword hit rate: 1.0
 - Missing keywords: None
 - Retrieved text preview: Scanned OCR test document API Key incidents must be reported within 24 hours  Audit logs for privileged operations are retained for
-- Pass: True
+- Pass: False
 
 ### ocr_audit_log_retention_content
 
 - Filename: 99_scanned_pdf_detection_test.pdf
 - Found: True
 - Expected status: loaded_with_ocr
-- Actual status: loaded_with_ocr
+- Actual status: skipped_no_extractable_text
 - Scanned PDF candidate: True
-- OCR performed: True
-- OCR succeeded: True
+- OCR performed: False
+- OCR succeeded: False
 - Pages with text: 0
 - Pages without text: 1
-- Extracted characters: 131
+- Extracted characters: 0
 - Retrieval hit: True
 - Retrieval rank: 1
 - Keyword hit rate: 1.0
 - Missing keywords: None
 - Retrieved text preview: Scanned OCR test document API Key incidents must be reported within 24 hours  Audit logs for privileged operations are retained for
-- Pass: True
+- Pass: False

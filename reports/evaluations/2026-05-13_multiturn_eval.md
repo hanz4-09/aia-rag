@@ -66,7 +66,7 @@ and whether expected keywords appeared in the second-turn answer.
 - Source hit: True
 - Keyword hit rate: 1.0
 - Pass: True
-- Answer preview: The audit logs must include the following fields: - Timestamp - User identity - Action type - Target resource - Request ID - Result status
+- Answer preview: Audit logs must include the following fields: timestamp, user identity, action type, target resource, request ID, and result status.
 
 ### mt_api_key_report_recipient_cn
 

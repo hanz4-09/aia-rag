@@ -1,7 +1,10 @@
 import argparse
 import csv
 import json
+<<<<<<< HEAD
 import os
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 import shutil
 import subprocess
 import sys
@@ -37,9 +40,12 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
     print(f"Command: {' '.join(command)}")
     print("-" * 80)
 
+<<<<<<< HEAD
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
 
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     process = subprocess.Popen(
         command,
         cwd=PROJECT_ROOT,
@@ -47,7 +53,10 @@ def run_command(command: List[str], description: str) -> Dict[str, Any]:
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
+<<<<<<< HEAD
         env=env,
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     )
 
     output_lines: List[str] = []
@@ -374,7 +383,11 @@ def main() -> None:
     if args.with_ingest:
         print("\n[1] Running ingestion...")
         result = run_command(
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/ingest.py"],
+=======
+            [sys.executable, "scripts/ingest.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
             "Run document ingestion",
         )
         command_results.append(result)
@@ -393,7 +406,10 @@ def main() -> None:
 
     eval_command = [
         sys.executable,
+<<<<<<< HEAD
         "-u",
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         "scripts/run_all_evaluations.py",
         "--mode",
         "all",
@@ -420,7 +436,11 @@ def main() -> None:
 
     print("\n[3] Generating operations report...")
     result = run_command(
+<<<<<<< HEAD
         [sys.executable, "-u", "scripts/generate_report.py"],
+=======
+        [sys.executable, "scripts/generate_report.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         "Generate operations report from JSONL logs",
     )
     command_results.append(result)
@@ -459,7 +479,11 @@ def main() -> None:
     print(f"  Failed or missing tasks:        {summary['failed_or_missing_tasks']}")
     print(
         f"  Overall pass:                   "
+<<<<<<< HEAD
         f"{'PASS' if summary['overall_pass'] else 'FAIL'}"
+=======
+        f"{'✅ PASS' if summary['overall_pass'] else '❌ FAIL'}"
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     )
     print("=" * 80)
 

@@ -1,6 +1,10 @@
 import argparse
 import csv
+<<<<<<< HEAD
 import os
+=======
+import json
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 import subprocess
 import sys
 import time
@@ -22,7 +26,11 @@ TASKS: List[Dict[str, Any]] = [
         "task": "operations_report",
         "mode": "core",
         "description": "Generate operations report from runtime logs.",
+<<<<<<< HEAD
         "command": [sys.executable, "-u", "scripts/generate_report.py"],
+=======
+        "command": [sys.executable, "scripts/generate_report.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         "report_patterns": [
             "reports/operations_report.csv",
         ],
@@ -32,8 +40,13 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate answer compliance against expected answers.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_answer_compliance.py"],
             [sys.executable, "-u", "scripts/evaluate_answers.py"],
+=======
+            [sys.executable, "scripts/evaluate_answer_compliance.py"],
+            [sys.executable, "scripts/evaluate_answers.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_answer_compliance_eval.csv",
@@ -44,9 +57,14 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate refusal behavior for unsafe or out-of-scope questions.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_refusals.py"],
             [sys.executable, "-u", "scripts/evaluate_refusal_appropriateness.py"],
             [sys.executable, "-u", "scripts/evaluate_refusal.py"],
+=======
+            [sys.executable, "scripts/evaluate_refusal_appropriateness.py"],
+            [sys.executable, "scripts/evaluate_refusal.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_refusal_appropriateness.csv",
@@ -58,7 +76,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate context precision and source accuracy.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_context_precision.py"],
+=======
+            [sys.executable, "scripts/evaluate_context_precision.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_context_precision_eval.csv",
@@ -69,8 +91,13 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate faithfulness with LLM judge or rule-based support checks.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_faithfulness.py"],
             [sys.executable, "-u", "scripts/evaluate_faithfulness_llm_judge.py"],
+=======
+            [sys.executable, "scripts/evaluate_faithfulness.py"],
+            [sys.executable, "scripts/evaluate_faithfulness_llm_judge.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_faithfulness_eval.csv",
@@ -81,7 +108,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate style and language consistency.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_style_consistency.py"],
+=======
+            [sys.executable, "scripts/evaluate_style_consistency.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_style_consistency_eval.csv",
@@ -92,7 +123,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate PII redaction behavior.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_pii_redaction.py"],
+=======
+            [sys.executable, "scripts/evaluate_pii_redaction.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_pii_redaction_eval.csv",
@@ -103,7 +138,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate multi-turn QA and session history usage.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_multiturn.py"],
+=======
+            [sys.executable, "scripts/evaluate_multiturn.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_multiturn_eval.csv",
@@ -114,9 +153,14 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate cache behavior.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_cache.py"],
             [sys.executable, "-u", "scripts/evaluate_cache_behavior.py"],
             [sys.executable, "-u", "scripts/verify_cache.py"],
+=======
+            [sys.executable, "scripts/evaluate_cache.py"],
+            [sys.executable, "scripts/evaluate_cache_behavior.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_cache_eval.csv",
@@ -127,8 +171,13 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate PDF and OCR ingestion behavior.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_ingestion_pdf_handling.py"],
             [sys.executable, "-u", "scripts/evaluate_pdf_ingestion.py"],
+=======
+            [sys.executable, "scripts/evaluate_ingestion_pdf_handling.py"],
+            [sys.executable, "scripts/evaluate_pdf_ingestion.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_pdf_ingestion_eval.csv",
@@ -139,7 +188,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "core",
         "description": "Evaluate persistent session memory and query rewrite.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_advanced_memory.py"],
+=======
+            [sys.executable, "scripts/evaluate_advanced_memory.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_advanced_memory_eval.csv",
@@ -150,7 +203,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "performance",
         "description": "Evaluate response latency against PRD target.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_latency.py"],
+=======
+            [sys.executable, "scripts/evaluate_latency.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_latency_eval.csv",
@@ -161,7 +218,11 @@ TASKS: List[Dict[str, Any]] = [
         "mode": "performance",
         "description": "Evaluate concurrent request behavior.",
         "command_candidates": [
+<<<<<<< HEAD
             [sys.executable, "-u", "scripts/evaluate_concurrency.py"],
+=======
+            [sys.executable, "scripts/evaluate_concurrency.py"],
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         ],
         "report_patterns": [
             "reports/evaluations/*_concurrency_eval.csv",
@@ -170,6 +231,7 @@ TASKS: List[Dict[str, Any]] = [
 ]
 
 
+<<<<<<< HEAD
 def safe_print(message: str = "", end: str = "\n", flush: bool = True) -> None:
     try:
         print(message, end=end, flush=flush)
@@ -205,6 +267,26 @@ def resolve_command(task: Dict[str, Any]) -> Optional[List[str]]:
 def find_latest_report(task: Dict[str, Any]) -> Optional[Path]:
     candidates: List[Path] = []
 
+=======
+def resolve_command(task: Dict[str, Any]) -> Optional[List[str]]:
+    if "command" in task:
+        return task["command"]
+
+    for command in task.get("command_candidates", []):
+        if len(command) < 2:
+            continue
+
+        script_path = PROJECT_ROOT / command[1]
+        if script_path.exists():
+            return command
+
+    return None
+
+
+def find_latest_report(task: Dict[str, Any]) -> Optional[Path]:
+    candidates: List[Path] = []
+
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     for pattern in task.get("report_patterns", []):
         matched = list(PROJECT_ROOT.glob(pattern))
         candidates.extend(path for path in matched if path.is_file())
@@ -212,6 +294,10 @@ def find_latest_report(task: Dict[str, Any]) -> Optional[Path]:
     if not candidates:
         return None
 
+<<<<<<< HEAD
+=======
+    # Prefer today's report if available.
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     today_candidates = [
         path for path in candidates if path.name.startswith(TODAY)
     ]
@@ -224,27 +310,38 @@ def find_latest_report(task: Dict[str, Any]) -> Optional[Path]:
 def run_subprocess(command: List[str]) -> Dict[str, Any]:
     start_time = time.time()
 
+<<<<<<< HEAD
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONIOENCODING"] = "utf-8"
 
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     process = subprocess.Popen(
         command,
         cwd=PROJECT_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+<<<<<<< HEAD
         encoding="utf-8",
         errors="replace",
         bufsize=1,
         env=env,
+=======
+        bufsize=1,
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     )
 
     output_lines: List[str] = []
     assert process.stdout is not None
 
     for line in process.stdout:
+<<<<<<< HEAD
         safe_print(line, end="")
+=======
+        print(line, end="")
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         output_lines.append(line)
 
     process.wait()
@@ -274,6 +371,10 @@ def read_csv_summary(report_path: Optional[Path]) -> Dict[str, Any]:
     if not rows:
         return {}
 
+<<<<<<< HEAD
+=======
+    # Common format: row_type=summary.
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     for row in rows:
         if row.get("row_type") == "summary":
             return {
@@ -282,6 +383,10 @@ def read_csv_summary(report_path: Optional[Path]) -> Dict[str, Any]:
                 if key and value not in {None, ""}
             }
 
+<<<<<<< HEAD
+=======
+    # Operations report format: metric,value.
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     if set(rows[0].keys()) >= {"metric", "value"}:
         return {
             row.get("metric", ""): row.get("value", "")
@@ -289,6 +394,10 @@ def read_csv_summary(report_path: Optional[Path]) -> Dict[str, Any]:
             if row.get("metric")
         }
 
+<<<<<<< HEAD
+=======
+    # Fallback: use first row.
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
     return {
         key: value
         for key, value in rows[0].items()
@@ -366,6 +475,7 @@ def run_task(task: Dict[str, Any], skip_run: bool) -> Dict[str, Any]:
 
     if command is None:
         report_path = find_latest_report(task)
+<<<<<<< HEAD
         report_summary = read_csv_summary(report_path)
         key_metrics = build_key_metrics(report_summary)
 
@@ -380,16 +490,27 @@ def run_task(task: Dict[str, Any], skip_run: bool) -> Dict[str, Any]:
                 "key_metrics": key_metrics,
                 "error": "No runnable evaluation script found. Reused existing report.",
             }
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 
         return {
             "task": task_name,
             "mode": task_mode,
+<<<<<<< HEAD
             "status": "missing",
             "duration_sec": duration_sec,
             "report_path": "",
             "description": task.get("description", ""),
             "key_metrics": "",
             "error": "No runnable evaluation script found and no existing report found.",
+=======
+            "status": "failed",
+            "duration_sec": duration_sec,
+            "report_path": relative_path(report_path),
+            "description": task.get("description", ""),
+            "key_metrics": "",
+            "error": "No runnable evaluation script found.",
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         }
 
     run_result = run_subprocess(command)
@@ -530,7 +651,10 @@ def write_summary_markdown(rows: List[Dict[str, Any]], mode: str) -> None:
             "- LLM-based evaluations may consume model quota.",
             "- Performance evaluations may take longer than rule-based checks.",
             "- `--skip-run` summarizes existing reports without rerunning evaluations.",
+<<<<<<< HEAD
             "- If a task has no runnable script but has an existing report, the report is reused and the task is marked as skipped.",
+=======
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
             "",
         ]
     )
@@ -539,6 +663,7 @@ def write_summary_markdown(rows: List[Dict[str, Any]], mode: str) -> None:
 
 
 def print_task_progress_header() -> None:
+<<<<<<< HEAD
     safe_print()
     safe_print("=" * 80)
     safe_print("CORE EVALUATION TASKS")
@@ -550,6 +675,19 @@ def print_task_progress_footer() -> None:
     safe_print("=" * 80)
     safe_print("CORE EVALUATION TASKS COMPLETED")
     safe_print("=" * 80)
+=======
+    print()
+    print("=" * 80)
+    print("CORE EVALUATION TASKS")
+    print("=" * 80)
+
+
+def print_task_progress_footer() -> None:
+    print()
+    print("=" * 80)
+    print("CORE EVALUATION TASKS COMPLETED")
+    print("=" * 80)
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 
 
 def main() -> None:
@@ -585,29 +723,47 @@ def main() -> None:
             else "running evaluation"
         )
 
+<<<<<<< HEAD
         safe_print()
         safe_print(f"[{index}/{total_tasks}] {task_name} ... {action}")
+=======
+        print()
+        print(f"[{index}/{total_tasks}] {task_name} ... {action}")
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 
         task_start = time.time()
         result = run_task(task, skip_run=args.skip_run)
         duration_sec = round(time.time() - task_start, 2)
 
+<<<<<<< HEAD
+=======
+        # Keep the duration measured by the task itself when available.
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
         if not result.get("duration_sec"):
             result["duration_sec"] = duration_sec
 
         status = result.get("status", "unknown")
 
         if status in {"success", "skipped"}:
+<<<<<<< HEAD
             icon = "[PASS]"
         else:
             icon = "[FAIL]"
 
         safe_print(
+=======
+            icon = "✅"
+        else:
+            icon = "❌"
+
+        print(
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
             f"[{index}/{total_tasks}] {task_name} ... "
             f"{icon} {status}, duration={result['duration_sec']}s"
         )
 
         if result.get("report_path"):
+<<<<<<< HEAD
             safe_print(f"  report: {result['report_path']}")
 
         if result.get("key_metrics"):
@@ -615,6 +771,12 @@ def main() -> None:
 
         if result.get("error"):
             safe_print(f"  note: {result['error']}")
+=======
+            print(f"  report: {result['report_path']}")
+
+        if result.get("error"):
+            print(f"  error: {result['error']}")
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 
         rows.append(result)
 
@@ -627,6 +789,7 @@ def main() -> None:
         1 for row in rows if is_failed_or_missing_result(row)
     )
 
+<<<<<<< HEAD
     safe_print()
     safe_print("=" * 80)
     safe_print("ALL EVALUATIONS SUMMARY")
@@ -641,6 +804,19 @@ def main() -> None:
     safe_print(f"  CSV summary:                  {SUMMARY_CSV_PATH}")
     safe_print(f"  Markdown summary:             {SUMMARY_MD_PATH}")
     safe_print("=" * 80)
+=======
+    print()
+    print("=" * 80)
+    print("ALL EVALUATIONS SUMMARY")
+    print("=" * 80)
+    print(f"  Mode:                         {args.mode}")
+    print(f"  Total tasks:                  {len(rows)}")
+    print(f"  Tasks with available reports: {sum(1 for row in rows if is_report_available_result(row))}")
+    print(f"  Failed or missing tasks:      {failed_or_missing_tasks}")
+    print(f"  CSV summary:                  {SUMMARY_CSV_PATH}")
+    print(f"  Markdown summary:             {SUMMARY_MD_PATH}")
+    print("=" * 80)
+>>>>>>> 3044aa3e87941ae68dcaf42676ab16a819150c02
 
     if failed_or_missing_tasks > 0:
         sys.exit(1)

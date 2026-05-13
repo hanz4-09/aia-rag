@@ -13,7 +13,7 @@ Evaluation Type: Advanced Memory v1 Evaluation
 - Query rewrite applied rate: 1.0
 - Retrieval query resolution rate: 1.0
 - Source hit rate: 1.0
-- Avg keyword hit rate: 1.0
+- Avg keyword hit rate: 0.8334
 - PRD pass: True
 
 ## Method
@@ -38,7 +38,7 @@ source hit, and keyword coverage on the second turn.
 - Source hit: True
 - Keyword hit rate: 1.0
 - Pass: True
-- Answer preview: Audit logs for privileged operations should be retained for at least one year. Operational logs should be retained for at least 90 days unless a longer retention period is required by legal, security, or business requirements.
+- Answer preview: Audit logs for privileged operations should be retained for at least one year.
 
 ### am_api_key_report_window
 
@@ -52,6 +52,6 @@ source hit, and keyword coverage on the second turn.
 - Rewrite strategy: previous_question_plus_current_follow_up
 - Previous question in retrieval query: True
 - Source hit: True
-- Keyword hit rate: 1.0
+- Keyword hit rate: 0.6667
 - Pass: True
-- Answer preview: 所有确认的 API Key 泄露事件必须在 24 小时内报告给 Security Operations Team。
+- Answer preview: 如果发现 API Key 泄露，必须在 24 小时内报告。
